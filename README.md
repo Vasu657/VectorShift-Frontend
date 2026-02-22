@@ -115,8 +115,8 @@ The environment is aggressively architected for extensibility:
 --------------------------------------------------
 ### Clone Repository
 ```bash
-git clone <repo-url>
-cd <project-folder>
+git clone https://github.com/Vasu657/VectorShift-Frontend.git
+cd VectorShift-Frontend
 ```
 
 ### Start Backend Services
