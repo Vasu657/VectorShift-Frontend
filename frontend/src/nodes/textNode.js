@@ -1,5 +1,5 @@
 // nodes/textNode.js — Store-synced text node with auto-resize and variable handles
-import { useEffect, useRef, useCallback } from 'react';
+import { memo, useEffect, useRef, useCallback } from 'react';
 import { Position } from 'reactflow';
 import { BaseNode, FieldLabel } from './BaseNode';
 import { useStore } from '../store';
@@ -22,7 +22,7 @@ const getHandles = (text) => {
   ];
 };
 
-export const TextNode = ({ id, data, selected }) => {
+export const TextNode = memo(({ id, data, selected }) => {
   const updateNodeData = useStore((s) => s.updateNodeData);
   const textareaRef = useRef(null);
 
@@ -76,4 +76,4 @@ export const TextNode = ({ id, data, selected }) => {
       </div>
     </BaseNode>
   );
-};
+});

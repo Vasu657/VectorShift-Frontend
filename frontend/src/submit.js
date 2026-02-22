@@ -1,24 +1,17 @@
-// submit.js — Run Pipeline button — displays rich backend analysis, validation, and simulated execution
+// submit.js — Run Pipeline button — displays rich backend analysis, validation, and real SSE execution
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from './store';
+import { useSettingsStore } from './store/useSettingsStore';
 import { shallow } from 'zustand/shallow';
 import { parsePipeline, validatePipeline } from './api/client';
 import {
     Play, Activity, Server, LayoutTemplate, Link2, Route,
     X, CheckCircle2, XCircle, AlertTriangle, Info,
     Cpu, GitBranch, TerminalSquare, Loader2, TrendingUp, ShieldCheck, ShieldX,
-    ChevronDown, ChevronUp
+    ChevronDown, ChevronUp, PauseCircle, Send, PlayCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-const TIMEOUTS = {
-    API_NODE: 1500,
-    DEFAULT_NODE: 800,
-    FINISH_DELAY: 600,
-    TAB_SWITCH: 1500,
-    START_DELAY: 400
-};
 
 const selector = (state) => ({
     pipelineName: state.pipelineName,
@@ -57,6 +50,8 @@ const Badge = ({ color, children }) => {
 
 export const SubmitButton = () => {
     const { pipelineName, setExecutionState, setTerminalState, isSidebarOpen } = useStore(selector, shallow);
+    const apiBaseUrl = useSettingsStore((s) => s.apiBaseUrl);
+
     const [isLoading, setIsLoading] = useState(false);
     const [pipelineResult, setPipelineResult] = useState(null);
     const [activeTab, setActiveTab] = useState('analysis');
@@ -64,8 +59,17 @@ export const SubmitButton = () => {
     // Execution state
     const [isExecuting, setIsExecuting] = useState(false);
     const [executionLogs, setExecutionLogs] = useState([]);
-    const [executionStep, setExecutionStep] = useState(0);
+
+    // HITL Pause State
+    const [isPaused, setIsPaused] = useState(false);
+    const [pausedNodeId, setPausedNodeId] = useState(null);
+    const [pipelineId, setPipelineId] = useState(null);
+    const [userInput, setUserInput] = useState('');
+
+    const [executionMetrics, setExecutionMetrics] = useState({ cost: 0, tokens: 0 });
+
     const logsEndRef = useRef(null);
+    const abortControllerRef = useRef(null);
 
     const [isExpanded, setIsExpanded] = useState(true);
 
@@ -81,100 +85,153 @@ export const SubmitButton = () => {
         }
     }, [executionLogs]);
 
-    // Simulated execution engine
+    // Clean up abort controller on unmount
     useEffect(() => {
-        if (!isExecuting || !pipelineResult?.analysis?.execution_plan) return;
-
-        const plan = pipelineResult.analysis.execution_plan;
-
-        let finishTimer;
-        let switchTimer;
-
-        if (executionStep >= plan.length) {
-            finishTimer = setTimeout(() => {
-                setExecutionLogs(prev => [
-                    ...prev,
-                    {
-                        time: new Date().toLocaleTimeString(),
-                        type: 'success',
-                        message: 'Pipeline execution finished successfully.'
-                    },
-                    {
-                        time: new Date().toLocaleTimeString(),
-                        type: 'info',
-                        message: '✓ All pipeline stages completed!'
-                    }
-                ]);
-                setExecutionState(false, []); // clear all node glowing
-
-                // Clear edge animations
-                useStore.setState(s => ({
-                    edges: s.edges.map(e => ({ ...e, animated: false, style: {} }))
-                }));
-
-                // Auto-switch back to Analysis tab after a brief delay
-                switchTimer = setTimeout(() => {
-                    setActiveTab('analysis');
-                    // NOW we turn off execution, after the UI is done transitioning out
-                    setIsExecuting(false);
-                }, TIMEOUTS.TAB_SWITCH);
-
-            }, TIMEOUTS.FINISH_DELAY);
-            return () => {
-                clearTimeout(finishTimer);
-                if (switchTimer) clearTimeout(switchTimer);
-            };
-        }
-
-        const nodeId = plan[executionStep];
-        const stateNodes = useStore.getState().nodes;
-        const node = stateNodes.find(n => n.id === nodeId);
-        const nodeType = node ? node.type : 'Unknown';
-        const nodeLabel = nodeType.charAt(0).toUpperCase() + nodeType.slice(1);
-
-        let completeTimer;
-
-        // Step 1: Log that we started the node and set it as active in the store
-        const startTimer = setTimeout(() => {
-            setExecutionState(true, [nodeId]);
-            setExecutionLogs(prev => [...prev, {
-                time: new Date().toLocaleTimeString(),
-                type: 'info',
-                message: `Starting ${nodeLabel} node (${nodeId})...`
-            }]);
-
-            // Step 2: "Process" the node (wait longer for LLM/API nodes)
-            const processTime = (nodeType === 'llm' || nodeType === 'api') ? TIMEOUTS.API_NODE : TIMEOUTS.DEFAULT_NODE;
-
-            completeTimer = setTimeout(() => {
-                setExecutionLogs(prev => [...prev, {
-                    time: new Date().toLocaleTimeString(),
-                    type: 'success',
-                    message: `Completed ${nodeLabel} node.`
-                }]);
-
-                // Show data flowing ONTO the next node(s)
-                useStore.setState(s => ({
-                    edges: s.edges.map(e => {
-                        // Stop animating edges coming IN to this node (data consumed)
-                        if (e.target === nodeId) return { ...e, animated: false, style: {} };
-                        // Start animating OUTGOING edges (data produced)
-                        if (e.source === nodeId) return { ...e, animated: true, style: { strokeWidth: 2, stroke: '#6366f1' } };
-                        return e;
-                    })
-                }));
-
-                setExecutionStep(s => s + 1); // move to next node
-            }, processTime);
-
-        }, TIMEOUTS.START_DELAY);
-
         return () => {
-            clearTimeout(startTimer);
-            if (completeTimer) clearTimeout(completeTimer);
-        };
-        // Note: Intentionally excluding nodes and edges from dependencies to prevent re-trigger loop bugs; fetching from store statically.
-    }, [isExecuting, executionStep, pipelineResult, setExecutionState]);
+            if (abortControllerRef.current) abortControllerRef.current.abort();
+        }
+    }, [])
+
+    const startStreamingExecution = async (resumeNodeId = null, resumeInput = null) => {
+        const { nodes, edges } = useStore.getState();
+
+        setIsExecuting(true);
+        setIsPaused(false);
+        setPausedNodeId(null);
+        setUserInput('');
+
+        if (!resumeNodeId) setExecutionMetrics({ cost: 0, tokens: 0 });
+
+        abortControllerRef.current = new AbortController();
+
+        try {
+            // Build env map from settings store — these are checked by the backend per node type
+            const settings = useSettingsStore.getState();
+            const env = {
+                OPENAI_API_KEY: settings.openaiApiKey || '',
+                PINECONE_API_KEY: settings.pineconeApiKey || '',
+                SLACK_WEBHOOK_URL: settings.slackWebhookUrl || '',
+                SENDGRID_API_KEY: settings.sendgridApiKey || '',
+                GITHUB_TOKEN: settings.githubToken || '',
+                NOTION_TOKEN: settings.notionToken || '',
+                GOOGLE_SHEETS_API_KEY: settings.googleSheetsApiKey || '',
+            };
+
+            const response = await fetch(`${apiBaseUrl}/api/v1/pipelines/execute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nodes,
+                    edges,
+                    pipeline_id: pipelineId,
+                    resume_node_id: resumeNodeId,
+                    user_input: resumeInput,
+                    env,
+                }),
+                signal: abortControllerRef.current.signal
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            // To animate edges natively, we fetch from store and update just the ones related
+            const animateEdgeSource = (sourceNodeId) => {
+                useStore.setState(s => ({
+                    edges: s.edges.map(e => e.source === sourceNodeId ? { ...e, animated: true, style: { strokeWidth: 2, stroke: '#6366f1' } } : e)
+                }));
+            };
+            const stopEdgeAnimationTarget = (targetNodeId) => {
+                useStore.setState(s => ({
+                    edges: s.edges.map(e => e.target === targetNodeId ? { ...e, animated: false, style: {} } : e)
+                }));
+            }
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+
+                const lines = buffer.split('\n\n');
+                buffer = lines.pop(); // keep last incomplete chunk
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.substring(6));
+
+                            if (data.event === 'error') {
+                                setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'error', message: `ERROR: ${data.message}` }]);
+                                break;
+                            }
+
+                            if (data.event === 'pipeline_start') {
+                                if (!pipelineId) setPipelineId(data.pipeline_id);
+                                if (!resumeNodeId) {
+                                    setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'info', message: `Pipeline started (ID: ${data.pipeline_id})` }]);
+                                } else {
+                                    setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'info', message: `Pipeline resumed from node: ${resumeNodeId}` }]);
+                                }
+                            }
+
+                            if (data.event === 'node_start') {
+                                setExecutionState(true, [data.node_id]);
+                                stopEdgeAnimationTarget(data.node_id);
+                                setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'info', message: `Starting node ${data.node_id} (${data.node_type})...` }]);
+                            }
+
+                            if (data.event === 'node_chunk') {
+                                // For streaming LLMs, update log or node data visually
+                                // Here we just append to the last log if it's the same node, else create a generic marker
+                                // For simplicity, let's keep it silent in UI unless needed, or maybe update node internal store.
+                            }
+
+                            if (data.event === 'node_complete') {
+                                setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'success', message: `Completed node ${data.node_id}.` }]);
+                                animateEdgeSource(data.node_id);
+                                if (data.metrics) {
+                                    setExecutionMetrics(prev => ({
+                                        cost: prev.cost + (data.metrics.cost || 0),
+                                        tokens: prev.tokens + ((data.metrics.tokens_in || 0) + (data.metrics.tokens_out || 0))
+                                    }));
+                                }
+                            }
+
+                            if (data.event === 'node_paused') {
+                                setIsPaused(true);
+                                setPausedNodeId(data.node_id);
+                                setPipelineId(data.pipeline_id);
+                                setExecutionState(true, [data.node_id]); // keep it glowing but color amber
+                                setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'warn', message: `PAUSED at ${data.node_id}: ${data.message}` }]);
+                                break; // exit stream
+                            }
+
+                            if (data.event === 'pipeline_complete') {
+                                setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'success', message: '✓ All pipeline stages completed!' }]);
+                                setExecutionState(false, []);
+                                useStore.setState(s => ({ edges: s.edges.map(e => ({ ...e, animated: false, style: {} })) }));
+                                setIsExecuting(false);
+                            }
+                        } catch (e) {
+                            console.error('Failed to parse SSE JSON:', e);
+                        }
+                    }
+                }
+
+                if (isPaused) break;
+            }
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'error', message: `Connection failed: ${err.message}` }]);
+                setIsExecuting(false);
+                setExecutionState(false, []);
+            }
+        }
+    };
 
     const handleSubmit = async () => {
         const { nodes, edges, pipelineName } = useStore.getState();
@@ -187,8 +244,9 @@ export const SubmitButton = () => {
         // Reset execution state and flush old stale data before a new API request
         setPipelineResult(null);
         setExecutionLogs([]);
-        setExecutionStep(0);
         setIsExecuting(false);
+        setIsPaused(false);
+        setPipelineId(null);
         setExecutionState(false, []);
 
         try {
@@ -216,7 +274,7 @@ export const SubmitButton = () => {
                     type: 'info',
                     message: 'Initializing execution environment...'
                 }]);
-                setIsExecuting(true);
+                await startStreamingExecution();
             } else {
                 setActiveTab('validation');
             }
@@ -229,19 +287,36 @@ export const SubmitButton = () => {
         }
     };
 
+    const stopExecution = () => {
+        if (abortControllerRef.current) abortControllerRef.current.abort();
+        setIsExecuting(false);
+        setIsPaused(false);
+        setExecutionState(false, []);
+        useStore.setState(s => ({ edges: s.edges.map(e => ({ ...e, animated: false, style: {} })) }));
+        setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'error', message: `Pipeline cancelled by user.` }]);
+    }
+
+    const resumeExecution = () => {
+        if (!userInput.trim()) {
+            toast.error('Provide input before resuming.');
+            return;
+        }
+        startStreamingExecution(pausedNodeId, userInput);
+    }
+
     return (
         <>
             <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={isLoading || isExecuting}
+                disabled={isLoading || (isExecuting && !isPaused)}
                 aria-label="Run pipeline analysis"
                 className="flex items-center gap-2 flex-shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white rounded-lg font-semibold shadow-sm hover:shadow transition-all disabled:bg-slate-400 disabled:cursor-not-allowed text-sm"
             >
                 {isLoading
                     ? <Activity className="w-4 h-4 animate-spin" />
                     : <Play className="w-4 h-4" fill="currentColor" />}
-                {isLoading ? 'Analysing…' : isExecuting ? 'Executing...' : 'Run Pipeline'}
+                {isLoading ? 'Analysing…' : isExecuting ? (isPaused ? 'Resume' : 'Executing...') : 'Run Pipeline'}
             </button>
 
             {pipelineResult && createPortal(
@@ -266,7 +341,28 @@ export const SubmitButton = () => {
                                 {pipelineName.toLowerCase().replace(/\s+/g, '-')}-run.sh
                             </span>
                         </div>
+
+                        {/* Live Metrics Snippet in Title bar */}
+                        {(isExecuting || executionMetrics.tokens > 0) && (
+                            <div className="flex items-center gap-3 ml-auto mr-4 text-[10px] font-bold">
+                                <span className="text-amber-600 dark:text-amber-500 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded-full">
+                                    🪙 {executionMetrics.tokens.toLocaleString()} tokens
+                                </span>
+                                <span className="text-emerald-600 dark:text-emerald-500 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full">
+                                    ${executionMetrics.cost.toFixed(4)}
+                                </span>
+                            </div>
+                        )}
+
                         <div className="flex items-center gap-3">
+                            {isExecuting && !isPaused && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); stopExecution(); }}
+                                    className="px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded flex items-center gap-1 hover:bg-red-200"
+                                >
+                                    <XCircle className="w-3 h-3" /> STOP
+                                </button>
+                            )}
                             <button
                                 className="p-1 text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
                                 aria-label="Toggle expansion"
@@ -277,8 +373,8 @@ export const SubmitButton = () => {
                                 className="p-1 text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                                 onClick={(e) => {
                                     e.stopPropagation();
+                                    stopExecution();
                                     setPipelineResult(null);
-                                    setIsExecuting(false);
                                 }}
                                 aria-label="Close terminal"
                             >
@@ -414,40 +510,59 @@ export const SubmitButton = () => {
 
                                 {/* ── Execution tab ── */}
                                 {activeTab === 'execution' && (() => {
-                                    const planLength = (pipelineResult.analysis.execution_plan || []).length;
                                     return (
                                         <div className="h-full flex flex-col">
                                             {pipelineResult.analysis.is_dag && pipelineResult.validation.valid ? (
                                                 <>
-                                                    {isExecuting && (
-                                                        <div className="w-full bg-slate-200 dark:bg-slate-950 h-1 mb-4 rounded overflow-hidden">
-                                                            <div
-                                                                className="bg-emerald-500 h-1 transition-all duration-300 relative"
-                                                                style={{ width: `${planLength > 0 ? (Math.min(executionStep, planLength) / planLength) * 100 : 100}%` }}
-                                                            >
-                                                                <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                                                            </div>
-                                                        </div>
-                                                    )}
-
                                                     <div className="flex-1 font-mono text-[13px] text-slate-700 dark:text-slate-300 space-y-1.5" style={{ minHeight: '180px' }}>
-                                                        <div className="text-slate-500 mb-4">$ pipeline-runner --execute ./graph.json</div>
+                                                        <div className="text-slate-500 mb-4">$ pipeline-runner --stream ./graph.json</div>
                                                         {executionLogs.map((log, i) => (
                                                             <div key={i} className="flex gap-4">
-                                                                <span className="text-slate-400 dark:text-slate-600 select-none">[{log.time}]</span>
-                                                                <span className={`break-all ${log.type === 'success' ? 'text-emerald-600 dark:text-emerald-400 font-bold' :
+                                                                <span className="text-slate-400 dark:text-slate-600 select-none flex-shrink-0">[{log.time}]</span>
+                                                                <span className={`break-words ${log.type === 'success' ? 'text-emerald-600 dark:text-emerald-400 font-bold' :
                                                                     log.type === 'error' ? 'text-red-600 dark:text-red-400' :
-                                                                        log.type === 'info' ? 'text-indigo-600 dark:text-indigo-300' :
-                                                                            'text-slate-700 dark:text-slate-300'
+                                                                        log.type === 'warn' ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/10 px-1 rounded' :
+                                                                            log.type === 'info' ? 'text-indigo-600 dark:text-indigo-300' :
+                                                                                'text-slate-700 dark:text-slate-300'
                                                                     }`}>
                                                                     {log.message}
                                                                 </span>
                                                             </div>
                                                         ))}
-                                                        {isExecuting && (
+                                                        {isExecuting && !isPaused && (
                                                             <div className="flex gap-4 animate-pulse mt-2">
                                                                 <span className="text-slate-400 dark:text-slate-600">[{new Date().toLocaleTimeString()}]</span>
                                                                 <span className="text-slate-500">_</span>
+                                                            </div>
+                                                        )}
+                                                        {isPaused && (
+                                                            <div className="mt-4 p-4 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/10 rounded-xl relative overflow-hidden animate-slide-in-right">
+                                                                <div className="absolute top-0 left-0 w-1 h-full bg-amber-400" />
+                                                                <div className="flex items-start gap-4">
+                                                                    <PauseCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                                                                    <div className="flex-1 w-full">
+                                                                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-1">Human-in-the-Loop Required</h4>
+                                                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">Provide necessary input to node <code>{pausedNodeId}</code> to resume execution.</p>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={userInput}
+                                                                                onChange={(e) => setUserInput(e.target.value)}
+                                                                                onKeyDown={(e) => {
+                                                                                    if (e.key === 'Enter') resumeExecution();
+                                                                                }}
+                                                                                placeholder="Enter input text..."
+                                                                                className="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
+                                                                            />
+                                                                            <button
+                                                                                onClick={resumeExecution}
+                                                                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded flex items-center gap-2 transition-colors active:scale-95 text-sm"
+                                                                            >
+                                                                                <Send className="w-4 h-4" /> Resume
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         )}
                                                         <div ref={logsEndRef} />

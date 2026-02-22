@@ -148,3 +148,5 @@ export const CommandPalette = ({ isOpen, onClose, reactFlowInstance }) => {
         </div>
     );
 };
+
+export default CommandPalette;

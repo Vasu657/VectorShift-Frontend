@@ -1,5 +1,6 @@
 // App.js — Main app with all features wired: dark mode, undo/redo, export/import, auto-layout, command palette, shortcuts
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, Suspense, useEffect, lazy } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 import {
@@ -9,13 +10,9 @@ import {
 import { PipelineToolbar } from './toolbar';
 import { PipelineUI } from './ui';
 import { SubmitButton } from './submit';
-import { ConfigurationSidebar } from './components/ConfigurationSidebar';
-import { CommandPalette } from './components/CommandPalette';
-import { ShortcutHelpModal } from './components/ShortcutHelpModal';
-import { SettingsPanel } from './components/SettingsPanel';
-import { TemplateGallery } from './components/TemplateGallery';
 import { setupRegistry } from './registry/setup';
-
+import { Dashboard } from './components/Dashboard';
+import { Welcome } from './components/Welcome';
 
 import { useStore, useTemporalStore, temporalStore } from './store';
 import { useTheme } from './hooks/useTheme';
@@ -23,6 +20,11 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { applyAutoLayout } from './utils/autoLayout';
 import { useSettingsStore } from './store/useSettingsStore';
 
+const CommandPalette = lazy(() => import('./components/CommandPalette'));
+const ShortcutHelpModal = lazy(() => import('./components/ShortcutHelpModal'));
+const SettingsPanel = lazy(() => import('./components/SettingsPanel'));
+const TemplateGallery = lazy(() => import('./components/TemplateGallery'));
+const ConfigurationSidebar = lazy(() => import('./components/ConfigurationSidebar').then(m => ({ default: m.ConfigurationSidebar })));
 
 // Initialize the plugin registry before React mounts (dedup guard prevents double registration)
 setupRegistry();
@@ -31,11 +33,9 @@ function App() {
   const { isDark, toggle: toggleTheme } = useTheme();
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const navigate = useNavigate();
   const reactFlowInstanceRef = useRef(null);
-
-
 
   // Store selectors
   const nodes = useStore((s) => s.nodes);
@@ -148,7 +148,7 @@ function App() {
     onOpenHelp: () => setIsHelpOpen(true),
   });
 
-  return (
+  const editorLayout = (
     <div className="flex h-screen w-full flex-col bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-200">
       {/* Toast notifications */}
       <Toaster
@@ -184,9 +184,13 @@ function App() {
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 px-4 shadow-sm backdrop-blur-md z-20 relative gap-4">
         {/* Logo + Pipeline Name */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white shadow-inner flex-shrink-0">
+          <button
+            onClick={() => navigate('/dashboard')}
+            title="Back to Dashboard"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-700 transition-colors font-bold text-white shadow-inner flex-shrink-0 cursor-pointer"
+          >
             <Hexagon className="w-5 h-5" fill="currentColor" />
-          </div>
+          </button>
           <input
             type="text"
             value={pipelineName}
@@ -241,7 +245,7 @@ function App() {
           </HeaderIconBtn>
           <div className="w-px h-5 bg-slate-200 dark:bg-slate-700" />
           <HeaderIconBtn
-            onClick={() => setIsSettingsOpen(true)}
+            onClick={() => navigate('/settings')}
             label="Open settings"
             title="Settings"
           >
@@ -257,24 +261,36 @@ function App() {
         <PipelineToolbar />
         <main className="flex-1 relative w-full h-full overflow-hidden" aria-label="Pipeline canvas area">
           <PipelineUI onReactFlowInit={handleReactFlowInit} />
-          <ConfigurationSidebar />
+          <Suspense fallback={null}>
+            <ConfigurationSidebar />
+          </Suspense>
         </main>
       </div>
 
       {/* Modals */}
-      <CommandPalette
-        isOpen={isPaletteOpen}
-        onClose={() => setIsPaletteOpen(false)}
-        reactFlowInstance={reactFlowInstanceRef.current}
-      />
-      <ShortcutHelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-      <SettingsPanel isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-      <TemplateGallery
-        isOpen={isGalleryOpen}
-        onClose={() => setIsGalleryOpen(false)}
-        onLoadTemplate={handleLoadTemplate}
-      />
+      <Suspense fallback={null}>
+        <CommandPalette
+          isOpen={isPaletteOpen}
+          onClose={() => setIsPaletteOpen(false)}
+          reactFlowInstance={reactFlowInstanceRef.current}
+        />
+        <ShortcutHelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+        <TemplateGallery
+          isOpen={isGalleryOpen}
+          onClose={() => setIsGalleryOpen(false)}
+          onLoadTemplate={handleLoadTemplate}
+        />
+      </Suspense>
     </div>
+  );
+
+  return (
+    <Routes>
+      <Route path="/" element={<Welcome />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/editor" element={editorLayout} />
+      <Route path="/settings" element={<Suspense fallback={null}><SettingsPanel /></Suspense>} />
+    </Routes>
   );
 }
 

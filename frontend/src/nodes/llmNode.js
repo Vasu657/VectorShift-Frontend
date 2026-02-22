@@ -1,5 +1,5 @@
 // nodes/llmNode.js — LLM node with model selector, store-synced state
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import { Position } from 'reactflow';
 import { BaseNode, FieldLabel, NodeSelect } from './BaseNode';
 import { useStore } from '../store';
@@ -7,7 +7,7 @@ import { Cpu } from 'lucide-react';
 
 const MODELS = ['gpt-4o', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet', 'claude-3-haiku', 'gemini-1.5-pro'];
 
-export const LLMNode = ({ id, data, selected }) => {
+export const LLMNode = memo(({ id, data, selected }) => {
   const updateNodeData = useStore((s) => s.updateNodeData);
 
   const model = data?.model ?? 'gpt-4o';
@@ -46,4 +46,4 @@ export const LLMNode = ({ id, data, selected }) => {
       </div>
     </BaseNode>
   );
-};
+});

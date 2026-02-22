@@ -6,6 +6,7 @@ from domain.schemas import BaseNodeSchema, EdgeSchema
 # ─── Node type registry (mirrors frontend NodeRegistry) ───────────────────────
 
 NODE_TYPE_META = {
+    # ── I/O ───────────────────────────────────────────────────────────────────
     "customInput": {
         "label": "Input", "category": "I/O", "color": "green",
         "description": "Pipeline entry point — provides text or data into the graph.",
@@ -24,14 +25,8 @@ NODE_TYPE_META = {
         ],
         "max_inputs": 1, "max_outputs": 0,
     },
-    "text": {
-        "label": "Text", "category": "Data", "color": "amber",
-        "description": "Text template with {{variable}} interpolation — creates dynamic prompts.",
-        "fields": [
-            {"name": "text", "type": "textarea", "label": "Text Template", "required": True, "default": "{{input}}"},
-        ],
-        "max_inputs": -1, "max_outputs": 1,
-    },
+
+    # ── AI ────────────────────────────────────────────────────────────────────
     "llm": {
         "label": "LLM", "category": "AI", "color": "purple",
         "description": "Large Language Model inference node.",
@@ -42,19 +37,64 @@ NODE_TYPE_META = {
         ],
         "max_inputs": 2, "max_outputs": 1,
     },
+    "embedder": {
+        "label": "Embedder", "category": "AI", "color": "violet",
+        "description": "Converts text into dense vector embeddings.",
+        "fields": [
+            {"name": "embeddingModel", "type": "select", "label": "Embedding Model",
+             "options": ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"], "default": "text-embedding-3-small"},
+            {"name": "dimensions", "type": "select", "label": "Dimensions",
+             "options": ["256", "512", "1024", "1536", "3072"], "default": "1536"},
+        ],
+        "max_inputs": 1, "max_outputs": 1,
+    },
+    "imageGen": {
+        "label": "Image Gen", "category": "AI", "color": "pink",
+        "description": "Generates images from a text prompt via DALL-E or Stable Diffusion.",
+        "fields": [
+            {"name": "imageModel", "type": "select", "label": "Model",
+             "options": ["dall-e-3", "dall-e-2", "stable-diffusion-xl"], "default": "dall-e-3"},
+            {"name": "imageSize", "type": "select", "label": "Size",
+             "options": ["256x256", "512x512", "1024x1024", "1792x1024"], "default": "1024x1024"},
+        ],
+        "max_inputs": 1, "max_outputs": 1,
+    },
+    "classifier": {
+        "label": "Classifier", "category": "AI", "color": "teal",
+        "description": "Zero-shot text classification into custom labels.",
+        "fields": [
+            {"name": "labels", "type": "text", "label": "Labels (comma-separated)", "required": True, "default": "positive, negative, neutral"},
+        ],
+        "max_inputs": 1, "max_outputs": 2,
+    },
+    "summarizer": {
+        "label": "Summarizer", "category": "AI", "color": "sky",
+        "description": "Condenses long documents into concise summaries.",
+        "fields": [
+            {"name": "summaryModel",  "type": "select", "label": "Model",
+             "options": ["gpt-4o", "claude-3-5-sonnet", "gemini-1.5-pro"], "default": "gpt-4o"},
+            {"name": "summaryStyle",  "type": "select", "label": "Style",
+             "options": ["Concise", "Bullet Points", "Detailed", "ELI5"], "default": "Concise"},
+            {"name": "summaryLength", "type": "select", "label": "Target Length",
+             "options": ["1 Sentence", "Short", "Medium", "Long"], "default": "Short"},
+        ],
+        "max_inputs": 1, "max_outputs": 1,
+    },
+
+    # ── Data ──────────────────────────────────────────────────────────────────
+    "text": {
+        "label": "Text", "category": "Data", "color": "amber",
+        "description": "Text template with {{variable}} interpolation.",
+        "fields": [
+            {"name": "text", "type": "textarea", "label": "Text Template", "required": True, "default": "{{input}}"},
+        ],
+        "max_inputs": -1, "max_outputs": 1,
+    },
     "transform": {
         "label": "Transform", "category": "Data", "color": "amber",
         "description": "Applies a transformation function to its input data.",
         "fields": [
             {"name": "transformFn", "type": "textarea", "label": "Transformation", "required": True, "default": ""},
-        ],
-        "max_inputs": 1, "max_outputs": 1,
-    },
-    "filter": {
-        "label": "Filter", "category": "Logic", "color": "cyan",
-        "description": "Filters data based on a condition — passes data only when the condition is met.",
-        "fields": [
-            {"name": "condition", "type": "text", "label": "Condition", "required": True, "default": ""},
         ],
         "max_inputs": 1, "max_outputs": 1,
     },
@@ -66,20 +106,161 @@ NODE_TYPE_META = {
         ],
         "max_inputs": -1, "max_outputs": 1,
     },
+    "jsonParser": {
+        "label": "JSON Parser", "category": "Data", "color": "amber",
+        "description": "Parses a JSON string and extracts a value via key path.",
+        "fields": [
+            {"name": "parseMode", "type": "select", "label": "Mode",
+             "options": ["Extract Key", "Stringify", "Array Length", "Keys List"], "default": "Extract Key"},
+            {"name": "jsonPath", "type": "text", "label": "Key Path", "default": ""},
+        ],
+        "max_inputs": 1, "max_outputs": 2,
+    },
+    "csvParser": {
+        "label": "CSV Parser", "category": "Data", "color": "green",
+        "description": "Parses a CSV string into rows and headers.",
+        "fields": [
+            {"name": "csvDelimiter", "type": "select", "label": "Delimiter",
+             "options": ["Comma", "Semicolon", "Tab", "Pipe"], "default": "Comma"},
+            {"name": "hasHeader", "type": "select", "label": "Has Header", "options": ["Yes", "No"], "default": "Yes"},
+        ],
+        "max_inputs": 1, "max_outputs": 2,
+    },
+    "calculator": {
+        "label": "Calculator", "category": "Data", "color": "cyan",
+        "description": "Evaluates a math expression from two inputs.",
+        "fields": [
+            {"name": "expression", "type": "text", "label": "Expression", "required": True, "default": "a + b"},
+        ],
+        "max_inputs": 2, "max_outputs": 1,
+    },
+
+    # ── Logic ─────────────────────────────────────────────────────────────────
+    "filter": {
+        "label": "Filter", "category": "Logic", "color": "cyan",
+        "description": "Filters data — passes data only when the condition is met.",
+        "fields": [
+            {"name": "condition", "type": "text", "label": "Condition", "required": True, "default": ""},
+        ],
+        "max_inputs": 1, "max_outputs": 1,
+    },
     "split": {
-        "label": "Split", "category": "Data", "color": "amber",
+        "label": "Split", "category": "Logic", "color": "cyan",
         "description": "Splits a single input into multiple output streams.",
         "fields": [
-            {"name": "delimiter", "type": "text", "label": "Delimiter", "default": "\\n\\n"},
+            {"name": "delimiter", "type": "text", "label": "Delimiter", "default": "\\n"},
         ],
         "max_inputs": 1, "max_outputs": -1,
     },
     "api": {
-        "label": "API Call", "category": "Automation", "color": "rose",
+        "label": "API Call", "category": "Logic", "color": "rose",
         "description": "Makes HTTP requests to external REST APIs.",
         "fields": [
-            {"name": "method", "type": "select", "label": "Method", "options": ["GET", "POST", "PUT", "DELETE", "PATCH"], "default": "GET"},
-            {"name": "url",    "type": "text",   "label": "URL", "required": True, "default": ""},
+            {"name": "method", "type": "select", "label": "Method",
+             "options": ["GET", "POST", "PUT", "DELETE", "PATCH"], "default": "GET"},
+            {"name": "url", "type": "text", "label": "URL", "required": True, "default": ""},
+        ],
+        "max_inputs": 1, "max_outputs": 1,
+    },
+    "conditional": {
+        "label": "Conditional", "category": "Logic", "color": "orange",
+        "description": "Branches execution into true or false paths.",
+        "fields": [
+            {"name": "condition", "type": "text", "label": "Condition", "required": True, "default": ""},
+        ],
+        "max_inputs": 1, "max_outputs": 2,
+    },
+    "loop": {
+        "label": "Loop", "category": "Logic", "color": "indigo",
+        "description": "Iterates over a list, emitting each item.",
+        "fields": [
+            {"name": "loopMode", "type": "select", "label": "Mode",
+             "options": ["For Each", "While Condition", "Fixed Count"], "default": "For Each"},
+            {"name": "maxIterations", "type": "text", "label": "Max Iterations", "default": "10"},
+        ],
+        "max_inputs": 1, "max_outputs": 2,
+    },
+    "delay": {
+        "label": "Delay", "category": "Logic", "color": "slate",
+        "description": "Pauses execution for a set duration.",
+        "fields": [
+            {"name": "delaySeconds", "type": "text", "label": "Duration", "default": "1"},
+            {"name": "delayUnit", "type": "select", "label": "Unit",
+             "options": ["Milliseconds", "Seconds", "Minutes"], "default": "Seconds"},
+        ],
+        "max_inputs": 1, "max_outputs": 1,
+    },
+
+    # ── Integrations ──────────────────────────────────────────────────────────
+    "vectorDb": {
+        "label": "Vector DB", "category": "Integrations", "color": "green",
+        "description": "Query, upsert, or delete vectors from a Pinecone index.",
+        "fields": [
+            {"name": "action",    "type": "select", "label": "Action",
+             "options": ["Query", "Upsert", "Delete"], "default": "Query"},
+            {"name": "indexName", "type": "text",   "label": "Index Name", "required": True, "default": ""},
+        ],
+        "max_inputs": 1, "max_outputs": 1,
+    },
+    "webScraper": {
+        "label": "Web Scraper", "category": "Integrations", "color": "cyan",
+        "description": "Extracts content from any public webpage.",
+        "fields": [
+            {"name": "url",    "type": "text",   "label": "Target URL", "required": True, "default": ""},
+            {"name": "format", "type": "select", "label": "Format",
+             "options": ["Markdown", "Raw Text", "HTML"], "default": "Markdown"},
+        ],
+        "max_inputs": 1, "max_outputs": 1,
+    },
+    "slackWebhook": {
+        "label": "Slack / Discord", "category": "Integrations", "color": "amber",
+        "description": "Sends a message to Slack or Discord via webhook.",
+        "fields": [
+            {"name": "webhookUrl", "type": "text", "label": "Webhook URL", "required": True, "default": ""},
+        ],
+        "max_inputs": 1, "max_outputs": 1,
+    },
+    "email": {
+        "label": "Email", "category": "Integrations", "color": "rose",
+        "description": "Sends transactional email via SendGrid, SMTP, or Mailgun.",
+        "fields": [
+            {"name": "emailProvider", "type": "select", "label": "Provider",
+             "options": ["SendGrid", "SMTP", "Mailgun", "Resend"], "default": "SendGrid"},
+            {"name": "emailTo",       "type": "text",   "label": "To",      "required": True,  "default": ""},
+            {"name": "emailSubject",  "type": "text",   "label": "Subject", "default": "Notification"},
+        ],
+        "max_inputs": 1, "max_outputs": 1,
+    },
+    "github": {
+        "label": "GitHub", "category": "Integrations", "color": "slate",
+        "description": "Interact with GitHub — create issues, read files, etc.",
+        "fields": [
+            {"name": "ghAction", "type": "select", "label": "Action",
+             "options": ["Create Issue", "Create PR", "Read File", "List Commits", "Get Repo Info"],
+             "default": "Create Issue"},
+            {"name": "ghRepo", "type": "text", "label": "Repository (owner/repo)", "required": True, "default": ""},
+        ],
+        "max_inputs": 1, "max_outputs": 1,
+    },
+    "googleSheets": {
+        "label": "Google Sheets", "category": "Integrations", "color": "green",
+        "description": "Read from or write to a Google Sheet.",
+        "fields": [
+            {"name": "sheetsAction",  "type": "select", "label": "Action",
+             "options": ["Append Row", "Read Range", "Update Cell", "Create Sheet"], "default": "Append Row"},
+            {"name": "spreadsheetId","type": "text",   "label": "Spreadsheet ID", "required": True, "default": ""},
+            {"name": "sheetRange",   "type": "text",   "label": "Range",           "default": "Sheet1!A:D"},
+        ],
+        "max_inputs": 1, "max_outputs": 1,
+    },
+    "notion": {
+        "label": "Notion", "category": "Integrations", "color": "stone",
+        "description": "Create or query pages in a Notion database.",
+        "fields": [
+            {"name": "notionAction", "type": "select", "label": "Action",
+             "options": ["Append Page", "Create Page", "Query Database", "Update Page", "Get Page"],
+             "default": "Create Page"},
+            {"name": "notionDbId", "type": "text", "label": "Database / Page ID", "required": True, "default": ""},
         ],
         "max_inputs": 1, "max_outputs": 1,
     },

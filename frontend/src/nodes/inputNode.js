@@ -1,11 +1,11 @@
 // nodes/inputNode.js — Store-synced input node
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import { Position } from 'reactflow';
 import { BaseNode, NodeInput, NodeSelect } from './BaseNode';
 import { useStore } from '../store';
 import { Database } from 'lucide-react';
 
-export const InputNode = ({ id, data, selected }) => {
+export const InputNode = memo(({ id, data, selected }) => {
   const updateNodeData = useStore((s) => s.updateNodeData);
 
   // Fallback values so the node renders cleanly on first drop
@@ -38,4 +38,4 @@ export const InputNode = ({ id, data, selected }) => {
       <NodeSelect label="Type" value={inputType} onChange={handleTypeChange} options={['Text', 'File', 'Image', 'Number', 'Boolean']} />
     </BaseNode>
   );
-};
+});

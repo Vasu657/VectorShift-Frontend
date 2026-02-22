@@ -66,3 +66,5 @@ export const ShortcutHelpModal = ({ isOpen, onClose }) => {
         </div>
     );
 };
+
+export default ShortcutHelpModal;

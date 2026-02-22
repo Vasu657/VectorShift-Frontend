@@ -1,9 +1,18 @@
-// toolbar.js — Enhanced node library with search, category grouping, and dark mode
+// toolbar.js — Enhanced node library with search, category grouping, count badges, and dark mode
 import { useState, useMemo } from 'react';
 import { useStore } from './store';
 import { DraggableNode } from './draggableNode';
 import { NodeRegistry } from './registry/NodeRegistry';
 import { Search, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+
+// Color map for category badges
+const CATEGORY_COLORS = {
+    'I/O': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+    'AI': 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+    'Data': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    'Logic': 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+    'Integrations': 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
+};
 
 export const PipelineToolbar = () => {
     const isSidebarOpen = useStore((s) => s.isSidebarOpen);
@@ -17,7 +26,8 @@ export const PipelineToolbar = () => {
         return allItems.filter(
             (item) =>
                 item.label.toLowerCase().includes(q) ||
-                (item.category || '').toLowerCase().includes(q)
+                (item.category || '').toLowerCase().includes(q) ||
+                (item.description || '').toLowerCase().includes(q)
         );
     }, [query, allItems]);
 
@@ -71,18 +81,33 @@ export const PipelineToolbar = () => {
                     </div>
 
                     {/* Grouped results */}
-                    <div className="flex-1 overflow-y-auto pr-1 -mr-1 space-y-4">
+                    <div className="flex-1 overflow-y-auto pr-1 -mr-1 space-y-5">
                         {Object.keys(grouped).length === 0 ? (
-                            <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-4">No nodes match "{query}"</p>
+                            <div className="flex flex-col items-center gap-2 py-8 text-center">
+                                <span className="text-2xl">🔍</span>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">No nodes match <strong>"{query}"</strong></p>
+                            </div>
                         ) : (
                             Object.entries(grouped).map(([category, items]) => (
                                 <div key={category}>
-                                    <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2 px-1">
-                                        {category}
-                                    </h3>
-                                    <div className="flex flex-col gap-2">
+                                    <div className="flex items-center gap-2 mb-2 px-1">
+                                        <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex-1">
+                                            {category}
+                                        </h3>
+                                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${CATEGORY_COLORS[category] || 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'}`}>
+                                            {items.length}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
                                         {items.map((item) => (
-                                            <DraggableNode key={item.type} type={item.type} label={item.label} icon={item.icon} color={item.color} />
+                                            <DraggableNode
+                                                key={item.type}
+                                                type={item.type}
+                                                label={item.label}
+                                                icon={item.icon}
+                                                color={item.color}
+                                                description={item.description}
+                                            />
                                         ))}
                                     </div>
                                 </div>
@@ -90,13 +115,12 @@ export const PipelineToolbar = () => {
                         )}
                     </div>
 
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center mt-auto pt-2 border-t border-slate-200 dark:border-slate-700/50">
-                        Press <kbd className="px-1 bg-slate-100 dark:bg-slate-700 rounded font-mono text-slate-500 dark:text-slate-400">Ctrl+K</kbd> to quick-add
-                    </p>
+                    <div className="text-[10px] text-slate-400 dark:text-slate-500 text-center mt-auto pt-2 border-t border-slate-200 dark:border-slate-700/50 shrink-0">
+                        {allItems.length} nodes · Press <kbd className="px-1 bg-slate-100 dark:bg-slate-700 rounded font-mono text-slate-500 dark:text-slate-400">Ctrl+K</kbd> to quick-add
+                    </div>
                 </>
             ) : (
                 <div className="flex flex-col gap-3 mt-4 w-full">
-                    {/* Mini icons for closed state (just showing Node categories isn't essential here, but vertical text is nice) */}
                     <div style={{ writingMode: 'vertical-rl', transform: 'scale(-1)' }} className="text-[10px] font-bold tracking-widest text-slate-300 dark:text-slate-600 uppercase mt-4 text-center cursor-default select-none">
                         NODE LIBRARY
                     </div>

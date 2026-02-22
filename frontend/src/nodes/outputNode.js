@@ -1,11 +1,11 @@
 // nodes/outputNode.js — Store-synced output node
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import { Position } from 'reactflow';
 import { BaseNode, NodeInput, NodeSelect } from './BaseNode';
 import { useStore } from '../store';
 import { Workflow } from 'lucide-react';
 
-export const OutputNode = ({ id, data, selected }) => {
+export const OutputNode = memo(({ id, data, selected }) => {
   const updateNodeData = useStore((s) => s.updateNodeData);
 
   const outputName = data?.outputName ?? id.replace('customOutput-', 'output_');
@@ -37,4 +37,4 @@ export const OutputNode = ({ id, data, selected }) => {
       <NodeSelect label="Type" value={outputType} onChange={handleTypeChange} options={['Text', 'Image', 'File', 'JSON']} />
     </BaseNode>
   );
-};
+});

@@ -1,11 +1,12 @@
 // components/SettingsPanel.js — Full settings drawer with 4 categories
-import { useState } from 'react';
 import {
-    X, Settings, Palette, LayoutTemplate, Cpu, Workflow,
-    RotateCcw, Check, ChevronDown, ChevronRight,
-    Moon, Sun, Monitor, Zap, Grid3x3, Link2, Globe, Clock,
-    Save, Trash2, ArrowRight, ArrowDown
+    Settings, Palette, Grid3x3, Workflow,
+    RotateCcw, Check,
+    Moon, Sun, Monitor, Globe,
+    Save, Key, ArrowLeft, Eye, EyeOff
 } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useTheme } from '../hooks/useTheme';
 
@@ -91,19 +92,36 @@ const SliderRow = ({ label, description, value, min, max, step = 1, unit = '', o
     </div>
 );
 
-const TextInputRow = ({ label, description, value, placeholder, onChange, type = 'text' }) => (
-    <div className="flex flex-col gap-1.5 py-2.5">
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{label}</p>
-        {description && <p className="text-xs text-slate-400 dark:text-slate-500">{description}</p>}
-        <input
-            type={type}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            className="px-3 py-2 text-sm bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-700 dark:text-slate-200 font-medium placeholder:text-slate-400 font-mono"
-        />
-    </div>
-);
+const TextInputRow = ({ label, description, value, placeholder, onChange, type = 'text' }) => {
+    const [show, setShow] = useState(false);
+    const isPassword = type === 'password';
+    return (
+        <div className="flex flex-col gap-1.5 py-2.5">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{label}</p>
+            {description && <p className="text-xs text-slate-400 dark:text-slate-500">{description}</p>}
+            <div className="relative">
+                <input
+                    type={isPassword && !show ? 'password' : 'text'}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder={placeholder}
+                    className="w-full px-3 py-2 pr-9 text-sm bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-700 dark:text-slate-200 font-medium placeholder:text-slate-400 font-mono"
+                />
+                {isPassword && (
+                    <button
+                        type="button"
+                        onClick={() => setShow((s) => !s)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                        aria-label={show ? 'Hide value' : 'Show value'}
+                        title={show ? 'Hide' : 'Show'}
+                    >
+                        {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
 
 const ACCENT_COLORS = [
     { key: 'indigo', label: 'Indigo', cls: 'bg-indigo-500' },
@@ -134,38 +152,11 @@ const AccentColorPicker = ({ value, onChange }) => (
     </div>
 );
 
-const CollapsibleSection = ({ icon: Icon, title, defaultOpen = true, children }) => {
-    const [open, setOpen] = useState(defaultOpen);
-    return (
-        <div>
-            <button
-                onClick={() => setOpen((o) => !o)}
-                className="w-full flex items-center gap-2 py-3 text-left group"
-            >
-                <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                    <Icon className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors flex-1">
-                    {title}
-                </span>
-                {open ? (
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                ) : (
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                )}
-            </button>
-            {open && (
-                <div className="pl-1 mb-2 divide-y divide-slate-50 dark:divide-slate-700/50">
-                    {children}
-                </div>
-            )}
-        </div>
-    );
-};
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-export const SettingsPanel = ({ isOpen, onClose }) => {
+export const SettingsPanel = () => {
+    const navigate = useNavigate();
     const settings = useSettingsStore((s) => s);
     const setSetting = useSettingsStore((s) => s.setSetting);
     const resetSettings = useSettingsStore((s) => s.resetSettings);
@@ -195,247 +186,322 @@ export const SettingsPanel = ({ isOpen, onClose }) => {
         }
     };
 
-    if (!isOpen) return null;
-
     return (
-        <>
-            {/* Backdrop */}
-            <div
-                className="fixed inset-0 z-[90] bg-black/20 dark:bg-black/40 backdrop-blur-sm animate-fade-in"
-                onClick={onClose}
-                aria-hidden="true"
-            />
-
-            {/* Drawer */}
-            <aside
-                className="fixed top-0 right-0 h-full w-[380px] bg-white dark:bg-slate-800 shadow-2xl z-[95] flex flex-col border-l border-slate-200 dark:border-slate-700 animate-slide-in-right"
-                role="dialog"
-                aria-label="Settings panel"
-                aria-modal="true"
-            >
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-8 overflow-y-auto w-full">
+            <div className="max-w-6xl mx-auto space-y-8">
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700 shrink-0">
-                    <div className="flex items-center gap-2.5">
-                        <div className="p-1.5 rounded-lg bg-indigo-600 text-white">
-                            <Settings className="w-4 h-4" />
+                <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-700 gap-4">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="p-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                            aria-label="Go back"
+                        >
+                            <ArrowLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+                        </button>
+                        <div className="p-3 rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-500/20">
+                            <Settings className="w-6 h-6" />
                         </div>
                         <div>
-                            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Settings</h2>
-                            <p className="text-xs text-slate-400 dark:text-slate-500">Customize your workspace</p>
+                            <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-slate-100">Settings</h1>
+                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Configure your global workspace and connections</p>
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors"
-                        aria-label="Close settings"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
-                </div>
-
-                {/* Scrollable body */}
-                <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-1">
-
-                    {/* ── Appearance ── */}
-                    <CollapsibleSection icon={Palette} title="Appearance" defaultOpen={true}>
-                        {/* Theme */}
-                        <div className="py-2.5">
-                            <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Theme</p>
-                            <div className="grid grid-cols-3 gap-2">
-                                {[
-                                    { value: 'light', label: 'Light', icon: Sun },
-                                    { value: 'dark', label: 'Dark', icon: Moon },
-                                    { value: 'system', label: 'System', icon: Monitor },
-                                ].map(({ value, label, icon: Icon }) => (
-                                    <button
-                                        key={value}
-                                        onClick={() => handleThemeChange(value)}
-                                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-xs font-semibold
-                                            ${settings.theme === value
-                                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                                                : 'border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500'}`}
-                                        aria-pressed={settings.theme === value}
-                                    >
-                                        <Icon className="w-5 h-5" />
-                                        {label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <AccentColorPicker
-                            value={settings.accentColor}
-                            onChange={(v) => setSetting('accentColor', v)}
-                        />
-                    </CollapsibleSection>
-
-                    <div className="border-t border-slate-100 dark:border-slate-700 my-1" />
-
-                    {/* ── Canvas ── */}
-                    <CollapsibleSection icon={Grid3x3} title="Canvas" defaultOpen={true}>
-                        <SliderRow
-                            label="Grid Size"
-                            description="Spacing between grid dots in pixels"
-                            value={settings.gridSize}
-                            min={10}
-                            max={40}
-                            step={5}
-                            unit="px"
-                            onChange={(v) => setSetting('gridSize', v)}
-                        />
-                        <ToggleSwitch
-                            label="Snap to Grid"
-                            description="Nodes snap to the nearest grid point when dropped"
-                            checked={settings.snapToGrid}
-                            onChange={(v) => setSetting('snapToGrid', v)}
-                        />
-                        <ToggleSwitch
-                            label="Show Grid"
-                            description="Display the dot-grid background on the canvas"
-                            checked={settings.showGrid}
-                            onChange={(v) => setSetting('showGrid', v)}
-                        />
-                        <ToggleSwitch
-                            label="Show Minimap"
-                            description="Display the minimap in the bottom-right corner"
-                            checked={settings.showMinimap}
-                            onChange={(v) => setSetting('showMinimap', v)}
-                        />
-                        <SelectRow
-                            label="Connection Style"
-                            description="Shape of the lines connecting nodes"
-                            value={settings.connectionLineType}
-                            options={[
-                                { value: 'smoothstep', label: 'Smooth Step' },
-                                { value: 'bezier', label: 'Bezier Curve' },
-                                { value: 'straight', label: 'Straight' },
-                                { value: 'step', label: 'Step' },
-                            ]}
-                            onChange={(v) => setSetting('connectionLineType', v)}
-                        />
-                        <SliderRow
-                            label="Min Zoom"
-                            value={settings.minZoom}
-                            min={0.1}
-                            max={0.8}
-                            step={0.1}
-                            onChange={(v) => setSetting('minZoom', v)}
-                        />
-                        <SliderRow
-                            label="Max Zoom"
-                            value={settings.maxZoom}
-                            min={1.5}
-                            max={5}
-                            step={0.5}
-                            onChange={(v) => setSetting('maxZoom', v)}
-                        />
-                    </CollapsibleSection>
-
-                    <div className="border-t border-slate-100 dark:border-slate-700 my-1" />
-
-                    {/* ── Pipeline ── */}
-                    <CollapsibleSection icon={Workflow} title="Pipeline" defaultOpen={true}>
-                        <ToggleSwitch
-                            label="Animate Edges"
-                            description="Show animated dashes on edge connections"
-                            checked={settings.animateEdges}
-                            onChange={(v) => setSetting('animateEdges', v)}
-                        />
-                        <ToggleSwitch
-                            label="Show Edge Labels"
-                            description="Display handle names on connections"
-                            checked={settings.showEdgeLabels}
-                            onChange={(v) => setSetting('showEdgeLabels', v)}
-                        />
-                        <SelectRow
-                            label="Auto-Layout Direction"
-                            description="Direction used when Ctrl+L is pressed"
-                            value={settings.autoLayoutDirection}
-                            options={[
-                                { value: 'LR', label: '→ Left to Right' },
-                                { value: 'TB', label: '↓ Top to Bottom' },
-                            ]}
-                            onChange={(v) => setSetting('autoLayoutDirection', v)}
-                        />
-                    </CollapsibleSection>
-
-                    <div className="border-t border-slate-100 dark:border-slate-700 my-1" />
-
-                    {/* ── API ── */}
-                    <CollapsibleSection icon={Globe} title="API & Backend" defaultOpen={false}>
-                        <TextInputRow
-                            label="Backend URL"
-                            description="Base URL for the FastAPI backend server"
-                            value={settings.apiBaseUrl}
-                            placeholder="http://localhost:8000"
-                            onChange={(v) => setSetting('apiBaseUrl', v)}
-                        />
-                        <SliderRow
-                            label="Request Timeout"
-                            description="Maximum seconds to wait for an API response"
-                            value={settings.apiTimeout}
-                            min={5}
-                            max={120}
-                            step={5}
-                            unit="s"
-                            onChange={(v) => setSetting('apiTimeout', v)}
-                        />
-
-                        {/* Connection test */}
-                        <div className="py-2.5">
-                            <button
-                                onClick={async () => {
-                                    try {
-                                        const res = await fetch(`${settings.apiBaseUrl}/`);
-                                        if (res.ok) alert('✅ Backend is reachable!');
-                                        else alert(`⚠️ Backend responded with ${res.status}`);
-                                    } catch {
-                                        alert('❌ Cannot reach backend. Check the URL and make sure it is running.');
-                                    }
-                                }}
-                                className="w-full py-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700/50 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
-                            >
-                                Test Connection →
-                            </button>
-                        </div>
-                    </CollapsibleSection>
-
-                    <div className="border-t border-slate-100 dark:border-slate-700 my-1" />
-
-                    {/* ── Editor ── */}
-                    <CollapsibleSection icon={Save} title="Editor" defaultOpen={false}>
-                        <ToggleSwitch
-                            label="Autosave to Browser"
-                            description="Automatically persist the canvas to localStorage on every change"
-                            checked={settings.autosaveEnabled}
-                            onChange={(v) => setSetting('autosaveEnabled', v)}
-                        />
-                        <ToggleSwitch
-                            label="Confirm Before Clear"
-                            description="Show a confirmation dialog before clearing the canvas"
-                            checked={settings.confirmOnClear}
-                            onChange={(v) => setSetting('confirmOnClear', v)}
-                        />
-                    </CollapsibleSection>
-                </div>
-
-                {/* Footer */}
-                <div className="shrink-0 px-5 py-4 border-t border-slate-100 dark:border-slate-700 flex items-center gap-3">
                     <button
                         onClick={handleReset}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-red-900/20 bg-white dark:bg-slate-800 shadow-sm"
                         aria-label="Reset all settings to defaults"
                     >
-                        <RotateCcw className="w-3.5 h-3.5" />
+                        <RotateCcw className="w-4 h-4" />
                         Reset to Defaults
                     </button>
-                    <div className="ml-auto">
-                        <p className="text-[10px] text-slate-300 dark:text-slate-600">
-                            Settings are saved automatically
-                        </p>
-                    </div>
                 </div>
-            </aside>
-        </>
+
+                {/* Grid Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+
+                    {/* ── Appearance Card ── */}
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col gap-4">
+                        <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-700/50">
+                            <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                                <Palette className="w-4 h-4" />
+                            </div>
+                            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest">Appearance</h2>
+                        </div>
+                        <div className="flex-1 space-y-4">
+                            <div className="py-2.5">
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-3">Theme</p>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        { value: 'light', label: 'Light', icon: Sun },
+                                        { value: 'dark', label: 'Dark', icon: Moon },
+                                        { value: 'system', label: 'System', icon: Monitor },
+                                    ].map(({ value, label, icon: Icon }) => (
+                                        <button
+                                            key={value}
+                                            onClick={() => handleThemeChange(value)}
+                                            className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-xs font-semibold
+                                                ${settings.theme === value
+                                                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                                                    : 'border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500'}`}
+                                            aria-pressed={settings.theme === value}
+                                        >
+                                            <Icon className="w-5 h-5" />
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <AccentColorPicker
+                                value={settings.accentColor}
+                                onChange={(v) => setSetting('accentColor', v)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* ── Canvas Card ── */}
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col gap-4 row-span-2">
+                        <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-700/50">
+                            <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                                <Grid3x3 className="w-4 h-4" />
+                            </div>
+                            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest">Canvas</h2>
+                        </div>
+                        <div className="flex-1 space-y-2 divide-y divide-slate-50 dark:divide-slate-700/50">
+                            <SliderRow
+                                label="Grid Size"
+                                description="Spacing between grid dots in pixels"
+                                value={settings.gridSize}
+                                min={10}
+                                max={40}
+                                step={5}
+                                unit="px"
+                                onChange={(v) => setSetting('gridSize', v)}
+                            />
+                            <ToggleSwitch
+                                label="Snap to Grid"
+                                description="Nodes snap to the nearest grid point"
+                                checked={settings.snapToGrid}
+                                onChange={(v) => setSetting('snapToGrid', v)}
+                            />
+                            <ToggleSwitch
+                                label="Show Grid"
+                                checked={settings.showGrid}
+                                onChange={(v) => setSetting('showGrid', v)}
+                            />
+                            <ToggleSwitch
+                                label="Show Minimap"
+                                checked={settings.showMinimap}
+                                onChange={(v) => setSetting('showMinimap', v)}
+                            />
+                            <SelectRow
+                                label="Connection Style"
+                                description="Shape of the lines connecting nodes"
+                                value={settings.connectionLineType}
+                                options={[
+                                    { value: 'smoothstep', label: 'Smooth Step' },
+                                    { value: 'bezier', label: 'Bezier Curve' },
+                                    { value: 'straight', label: 'Straight' },
+                                    { value: 'step', label: 'Step' },
+                                ]}
+                                onChange={(v) => setSetting('connectionLineType', v)}
+                            />
+                            <SliderRow
+                                label="Min Zoom"
+                                value={settings.minZoom}
+                                min={0.1}
+                                max={0.8}
+                                step={0.1}
+                                onChange={(v) => setSetting('minZoom', v)}
+                            />
+                            <SliderRow
+                                label="Max Zoom"
+                                value={settings.maxZoom}
+                                min={1.5}
+                                max={5}
+                                step={0.5}
+                                onChange={(v) => setSetting('maxZoom', v)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* ── Pipeline Card ── */}
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col gap-4">
+                        <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-700/50">
+                            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+                                <Workflow className="w-4 h-4" />
+                            </div>
+                            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest">Pipeline</h2>
+                        </div>
+                        <div className="flex-1 space-y-2 divide-y divide-slate-50 dark:divide-slate-700/50">
+                            <ToggleSwitch
+                                label="Animate Edges"
+                                description="Show animated dashes on connections"
+                                checked={settings.animateEdges}
+                                onChange={(v) => setSetting('animateEdges', v)}
+                            />
+                            <ToggleSwitch
+                                label="Show Edge Labels"
+                                description="Display handle names on connections"
+                                checked={settings.showEdgeLabels}
+                                onChange={(v) => setSetting('showEdgeLabels', v)}
+                            />
+                            <SelectRow
+                                label="Auto-Layout Direction"
+                                description="Direction used when applying layout"
+                                value={settings.autoLayoutDirection}
+                                options={[
+                                    { value: 'LR', label: '→ Left to Right' },
+                                    { value: 'TB', label: '↓ Top to Bottom' },
+                                ]}
+                                onChange={(v) => setSetting('autoLayoutDirection', v)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* ── Editor Card ── */}
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col gap-4">
+                        <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-700/50">
+                            <div className="p-2 rounded-lg bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400">
+                                <Save className="w-4 h-4" />
+                            </div>
+                            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest">Editor</h2>
+                        </div>
+                        <div className="flex-1 space-y-2 divide-y divide-slate-50 dark:divide-slate-700/50">
+                            <ToggleSwitch
+                                label="Autosave to Browser"
+                                description="Automatically persist canvas to localStorage"
+                                checked={settings.autosaveEnabled}
+                                onChange={(v) => setSetting('autosaveEnabled', v)}
+                            />
+                            <ToggleSwitch
+                                label="Confirm Before Clear"
+                                description="Show dialog before clearing the canvas"
+                                checked={settings.confirmOnClear}
+                                onChange={(v) => setSetting('confirmOnClear', v)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* ── API Card ── */}
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col gap-4">
+                        <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-700/50">
+                            <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400">
+                                <Globe className="w-4 h-4" />
+                            </div>
+                            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest">API & Backend</h2>
+                        </div>
+                        <div className="flex-1 space-y-2 divide-y divide-slate-50 dark:divide-slate-700/50">
+                            <TextInputRow
+                                label="Backend URL"
+                                description="Base URL for the FastAPI backend"
+                                value={settings.apiBaseUrl}
+                                placeholder="http://localhost:8000"
+                                onChange={(v) => setSetting('apiBaseUrl', v)}
+                            />
+                            <SliderRow
+                                label="Request Timeout"
+                                description="Maximum seconds to wait"
+                                value={settings.apiTimeout}
+                                min={5}
+                                max={120}
+                                step={5}
+                                unit="s"
+                                onChange={(v) => setSetting('apiTimeout', v)}
+                            />
+
+                            {/* Connection test */}
+                            <div className="py-2.5">
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            const res = await fetch(`${settings.apiBaseUrl}/`);
+                                            if (res.ok) alert('✅ Backend is reachable!');
+                                            else alert(`⚠️ Backend responded with ${res.status}`);
+                                        } catch {
+                                            alert('❌ Cannot reach backend. Check the URL and make sure it is running.');
+                                        }
+                                    }}
+                                    className="w-full py-2.5 text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700/50 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
+                                >
+                                    Test Connection →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ── Secrets Card ── */}
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col gap-4">
+                        <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-700/50">
+                            <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                                <Key className="w-4 h-4" />
+                            </div>
+                            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest">Secrets & API Keys</h2>
+                        </div>
+                        <div className="flex-1 space-y-2 divide-y divide-slate-50 dark:divide-slate-700/50">
+                            <TextInputRow
+                                label="OpenAI API Key"
+                                description="For LLM, Embedder &amp; Image Gen nodes."
+                                value={settings.openaiApiKey}
+                                placeholder="sk-..."
+                                type="password"
+                                onChange={(v) => setSetting('openaiApiKey', v)}
+                            />
+                            <TextInputRow
+                                label="Pinecone API Key"
+                                description="For the Vector DB node."
+                                value={settings.pineconeApiKey}
+                                placeholder="pcsk_..."
+                                type="password"
+                                onChange={(v) => setSetting('pineconeApiKey', v)}
+                            />
+                            <TextInputRow
+                                label="Slack / Discord Webhook"
+                                description="For the Slack/Discord node."
+                                value={settings.slackWebhookUrl}
+                                placeholder="https://hooks.slack.com/..."
+                                type="password"
+                                onChange={(v) => setSetting('slackWebhookUrl', v)}
+                            />
+                            <TextInputRow
+                                label="SendGrid API Key"
+                                description="For the Email node."
+                                value={settings.sendgridApiKey}
+                                placeholder="SG...."
+                                type="password"
+                                onChange={(v) => setSetting('sendgridApiKey', v)}
+                            />
+                            <TextInputRow
+                                label="GitHub Access Token"
+                                description="For the GitHub node."
+                                value={settings.githubToken}
+                                placeholder="ghp_..."
+                                type="password"
+                                onChange={(v) => setSetting('githubToken', v)}
+                            />
+                            <TextInputRow
+                                label="Notion Integration Token"
+                                description="For the Notion node."
+                                value={settings.notionToken}
+                                placeholder="secret_..."
+                                type="password"
+                                onChange={(v) => setSetting('notionToken', v)}
+                            />
+                            <TextInputRow
+                                label="Google Sheets API Key"
+                                description="For the Google Sheets node."
+                                value={settings.googleSheetsApiKey}
+                                placeholder="AIza..."
+                                type="password"
+                                onChange={(v) => setSetting('googleSheetsApiKey', v)}
+                            />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     );
 };
+
+export default SettingsPanel;

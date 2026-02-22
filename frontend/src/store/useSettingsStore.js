@@ -21,9 +21,16 @@ const DEFAULT_SETTINGS = {
     showEdgeLabels: true,
     autoLayoutDirection: 'LR',         // 'LR' | 'TB'
 
-    // — API —
+    // — API & Secrets —
     apiBaseUrl: 'http://localhost:8000',
     apiTimeout: 15,                    // seconds
+    openaiApiKey: 'sk-test-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    pineconeApiKey: 'pcsk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    slackWebhookUrl: 'https://hooks.slack.com/services/TEST/DUMMY/xxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    sendgridApiKey: 'SG.test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    githubToken: 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    notionToken: 'secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    googleSheetsApiKey: 'AIzaTestxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
 
     // — Editor —
     autosaveEnabled: true,

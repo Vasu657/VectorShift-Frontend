@@ -39,6 +39,15 @@ class PipelineData(BaseModel):
     name: Optional[str] = Field(default="Untitled Pipeline", max_length=200)
 
 
+class ExecuteRequest(BaseModel):
+    nodes: List[BaseNodeSchema]
+    edges: List[EdgeSchema]
+    pipeline_id: Optional[str] = None
+    resume_node_id: Optional[str] = None
+    user_input: Optional[str] = None
+    env: Optional[Dict[str, str]] = None
+
+
 # ─── Response Schemas ─────────────────────────────────────────────────────────
 
 class NodeWarning(BaseModel):
