@@ -2,6 +2,7 @@
 import { useCallback } from 'react';
 import { Position } from 'reactflow';
 import { BaseNode, NodeInput, NodeSelect } from './BaseNode';
+import { DynamicModelSelect } from '../components/DynamicModelSelect';
 import { useStore } from '../store';
 import { Boxes, ImagePlus, Tags, AlignLeft } from 'lucide-react';
 
@@ -84,11 +85,10 @@ export const ClassifierNode = ({ id, data, selected }) => {
                 { type: 'source', position: Position.Right, id: 'score_out', style: { top: '65%' } },
             ]}
         >
-            <NodeSelect
+            <DynamicModelSelect
                 label="Model"
-                value={data?.classifierModel ?? 'gpt-4o'}
+                value={data?.classifierModel ?? ''}
                 onChange={handleModelChange}
-                options={['gpt-4o', 'gpt-3.5-turbo', 'claude-3-haiku']}
             />
             <NodeInput
                 label="Labels (comma-separated)"
@@ -114,11 +114,10 @@ export const SummarizerNode = ({ id, data, selected }) => {
                 { type: 'source', position: Position.Right, id: 'summary_out' },
             ]}
         >
-            <NodeSelect
+            <DynamicModelSelect
                 label="Model"
-                value={data?.summaryModel ?? 'gpt-4o'}
+                value={data?.summaryModel ?? ''}
                 onChange={handleModelChange}
-                options={['gpt-4o', 'claude-3-5-sonnet', 'gemini-1.5-pro']}
             />
             <NodeSelect
                 label="Style"

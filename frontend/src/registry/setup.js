@@ -54,7 +54,7 @@ export const setupRegistry = () => {
         category: 'AI',
         color: 'purple',
         fields: [
-            { key: 'model', label: 'Model', type: 'select', options: ['gpt-4o', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet', 'claude-3-haiku', 'gemini-1.5-pro'] },
+            { key: 'model', label: 'Model', type: 'modelSelect' },
             { key: 'temperature', label: 'Temperature', type: 'number', placeholder: '0.7', min: 0, max: 2, step: 0.1 },
             { key: 'maxTokens', label: 'Max Tokens', type: 'number', placeholder: '1024', min: 1, max: 128000 },
             { key: 'systemPrompt', label: 'System Prompt', type: 'textarea', placeholder: 'You are a helpful assistant...' },
@@ -93,7 +93,7 @@ export const setupRegistry = () => {
         category: 'AI',
         color: 'teal',
         fields: [
-            { key: 'classifierModel', label: 'Model', type: 'select', options: ['gpt-4o', 'gpt-3.5-turbo', 'claude-3-haiku'] },
+            { key: 'classifierModel', label: 'Model', type: 'modelSelect' },
             { key: 'labels', label: 'Labels (comma-separated)', type: 'text', placeholder: 'positive, negative, neutral' },
         ],
     });
@@ -105,7 +105,7 @@ export const setupRegistry = () => {
         category: 'AI',
         color: 'sky',
         fields: [
-            { key: 'summaryModel', label: 'Model', type: 'select', options: ['gpt-4o', 'claude-3-5-sonnet', 'gemini-1.5-pro'] },
+            { key: 'summaryModel', label: 'Model', type: 'modelSelect' },
             { key: 'summaryStyle', label: 'Style', type: 'select', options: ['Concise', 'Bullet Points', 'Detailed', 'ELI5'] },
             { key: 'summaryLength', label: 'Target Length', type: 'select', options: ['1 Sentence', 'Short', 'Medium', 'Long'] },
         ],
@@ -130,6 +130,7 @@ export const setupRegistry = () => {
         category: 'Data',
         color: 'amber',
         fields: [
+            { key: 'transformModel', label: 'Model', type: 'modelSelect' },
             { key: 'transformFn', label: 'Transform Logic', type: 'textarea', placeholder: 'Describe the transformation...' },
         ],
     });

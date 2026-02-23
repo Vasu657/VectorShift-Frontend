@@ -23,14 +23,14 @@ const DEFAULT_SETTINGS = {
 
     // — API & Secrets —
     apiBaseUrl: 'http://localhost:8000',
-    apiTimeout: 15,                    // seconds
-    openaiApiKey: 'sk-test-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    pineconeApiKey: 'pcsk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    slackWebhookUrl: 'https://hooks.slack.com/services/TEST/DUMMY/xxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    sendgridApiKey: 'SG.test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    githubToken: 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    notionToken: 'secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    googleSheetsApiKey: 'AIzaTestxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    apiTimeout: 30,                    // seconds
+    openrouterApiKey: '',              // sk-or-... (covers all LLM, Embedder, ImageGen)
+    pineconeApiKey: '',
+    slackWebhookUrl: '',
+    sendgridApiKey: '',
+    githubToken: '',
+    notionToken: '',
+    googleSheetsApiKey: '',
 
     // — Editor —
     autosaveEnabled: true,

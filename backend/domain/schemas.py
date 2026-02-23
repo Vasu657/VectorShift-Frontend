@@ -120,3 +120,26 @@ class NodeTypeInfo(BaseModel):
 
 class NodeTypesResponse(BaseModel):
     node_types: List[NodeTypeInfo]
+
+
+# ─── Pipeline Persistence Schemas ─────────────────────────────────────────────
+
+class SavePipelineRequest(BaseModel):
+    id: str = Field(..., max_length=100, description="Unique pipeline ID (UUID)")
+    name: str = Field(..., max_length=200, description="Human-readable pipeline name")
+    nodes: List[BaseNodeSchema] = Field(default=[])
+    edges: List[EdgeSchema] = Field(default=[])
+
+
+class SavedPipelineInfo(BaseModel):
+    """Lightweight record for the list endpoint."""
+    id: str
+    name: str
+    created_at: str
+    updated_at: str
+
+
+class SavedPipelineDetail(SavedPipelineInfo):
+    """Full record including nodes and edges."""
+    nodes: List[BaseNodeSchema] = []
+    edges: List[EdgeSchema] = []

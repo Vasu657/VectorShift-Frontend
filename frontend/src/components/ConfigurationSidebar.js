@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { useStore } from '../store';
 import { NodeRegistry } from '../registry/NodeRegistry';
 import { X, Settings2, Tag, Layers3, Plus, ArrowLeftRight, ChevronDown, ChevronRight } from 'lucide-react';
+import { DynamicModelSelect } from './DynamicModelSelect';
 
 // Map field type → input renderer
 const renderField = (field, value, onChange) => {
@@ -10,6 +11,15 @@ const renderField = (field, value, onChange) => {
         'w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-700 dark:text-slate-200 font-medium';
 
     switch (field.type) {
+        case 'modelSelect':
+            return (
+                <DynamicModelSelect
+                    label={null}
+                    value={value}
+                    onChange={(v) => onChange(field.key, v)}
+                    className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-700 dark:text-slate-200 font-medium appearance-none cursor-pointer"
+                />
+            );
         case 'select':
             return (
                 <select value={value ?? field.options?.[0] ?? ''} onChange={(e) => onChange(field.key, e.target.value)} className={`${baseClass} appearance-none cursor-pointer`}>

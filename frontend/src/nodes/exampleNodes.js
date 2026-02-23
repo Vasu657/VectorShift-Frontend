@@ -2,12 +2,14 @@
 import { useCallback } from 'react';
 import { Position } from 'reactflow';
 import { BaseNode, FieldLabel, NodeInput, NodeSelect } from './BaseNode';
+import { DynamicModelSelect } from '../components/DynamicModelSelect';
 import { useStore } from '../store';
 import { Layers, Filter, FileText, SplitSquareHorizontal, Webhook } from 'lucide-react';
 
 export const TransformNode = ({ id, data, selected }) => {
     const updateNodeData = useStore((s) => s.updateNodeData);
     const handleChange = useCallback((e) => updateNodeData(id, { transformFn: e.target.value }), [id, updateNodeData]);
+    const handleModelChange = useCallback((v) => updateNodeData(id, { transformModel: v }), [id, updateNodeData]);
     return (
         <BaseNode id={id} data={data} title="Transform" icon={Layers} color="amber" selected={selected}
             handles={[
@@ -15,6 +17,7 @@ export const TransformNode = ({ id, data, selected }) => {
                 { type: 'source', position: Position.Right, id: 'output' },
             ]}
         >
+            <DynamicModelSelect label="Model" value={data?.transformModel ?? ''} onChange={handleModelChange} />
             <NodeInput label="Transform Logic" value={data?.transformFn} onChange={handleChange} placeholder="Describe transformation..." />
         </BaseNode>
     );

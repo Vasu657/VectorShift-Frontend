@@ -99,7 +99,7 @@ export const GitHubNode = ({ id, data, selected }) => {
                 { type: 'source', position: Position.Right, id: 'result' },
             ]}
         >
-            <NodeSelect label="Action" value={data?.ghAction ?? 'Create Issue'} onChange={handleActionChange} options={['Create Issue', 'Create PR', 'Read File', 'List Commits', 'Get Repo Info']} />
+            <NodeSelect label="Action" value={data?.ghAction ?? 'Create Issue'} onChange={handleActionChange} options={['Create Issue', 'Create PR', 'Read File', 'List Commits', 'Get Repo Info', 'Read Entire Repository']} />
             <NodeInput label="Repository (owner/repo)" value={data?.ghRepo} onChange={handleRepoChange} placeholder="owner/repo-name" />
         </BaseNode>
     );

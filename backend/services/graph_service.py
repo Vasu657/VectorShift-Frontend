@@ -31,9 +31,7 @@ NODE_TYPE_META = {
         "label": "LLM", "category": "AI", "color": "purple",
         "description": "Large Language Model inference node.",
         "fields": [
-            {"name": "model", "type": "select", "label": "Model",
-             "options": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo", "claude-3-5-sonnet", "claude-3-haiku"],
-             "required": True, "default": "gpt-4o"},
+            {"name": "model", "type": "modelSelect", "label": "Model", "required": True, "default": ""},
         ],
         "max_inputs": 2, "max_outputs": 1,
     },
@@ -63,6 +61,7 @@ NODE_TYPE_META = {
         "label": "Classifier", "category": "AI", "color": "teal",
         "description": "Zero-shot text classification into custom labels.",
         "fields": [
+            {"name": "classifierModel", "type": "modelSelect", "label": "Model", "default": ""},
             {"name": "labels", "type": "text", "label": "Labels (comma-separated)", "required": True, "default": "positive, negative, neutral"},
         ],
         "max_inputs": 1, "max_outputs": 2,
@@ -71,8 +70,7 @@ NODE_TYPE_META = {
         "label": "Summarizer", "category": "AI", "color": "sky",
         "description": "Condenses long documents into concise summaries.",
         "fields": [
-            {"name": "summaryModel",  "type": "select", "label": "Model",
-             "options": ["gpt-4o", "claude-3-5-sonnet", "gemini-1.5-pro"], "default": "gpt-4o"},
+            {"name": "summaryModel", "type": "modelSelect", "label": "Model", "default": ""},
             {"name": "summaryStyle",  "type": "select", "label": "Style",
              "options": ["Concise", "Bullet Points", "Detailed", "ELI5"], "default": "Concise"},
             {"name": "summaryLength", "type": "select", "label": "Target Length",
@@ -94,6 +92,7 @@ NODE_TYPE_META = {
         "label": "Transform", "category": "Data", "color": "amber",
         "description": "Applies a transformation function to its input data.",
         "fields": [
+            {"name": "transformModel", "type": "modelSelect", "label": "Model", "default": ""},
             {"name": "transformFn", "type": "textarea", "label": "Transformation", "required": True, "default": ""},
         ],
         "max_inputs": 1, "max_outputs": 1,

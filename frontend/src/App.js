@@ -5,7 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 import {
   Hexagon, Sun, Moon, Undo2, Redo2, LayoutGrid, Download, Upload,
-  HelpCircle, Trash2, Settings, Sparkles
+  HelpCircle, Trash2, Settings, Sparkles, Save, FolderOpen, Loader2, X, Trash
 } from 'lucide-react';
 import { PipelineToolbar } from './toolbar';
 import { PipelineUI } from './ui';
@@ -13,6 +13,7 @@ import { SubmitButton } from './submit';
 import { setupRegistry } from './registry/setup';
 import { Dashboard } from './components/Dashboard';
 import { Welcome } from './components/Welcome';
+import { usePipelineStorage } from './hooks/usePipelineStorage';
 
 import { useStore, useTemporalStore, temporalStore } from './store';
 import { useTheme } from './hooks/useTheme';
@@ -34,8 +35,10 @@ function App() {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
   const navigate = useNavigate();
   const reactFlowInstanceRef = useRef(null);
+  const { isSaving, isLoading: isPipelinesLoading, savedPipelines, savePipeline, fetchSavedPipelines, loadPipeline, deletePipelineById } = usePipelineStorage();
 
   // Store selectors
   const nodes = useStore((s) => s.nodes);
@@ -139,6 +142,33 @@ function App() {
   }, [nodes.length, set]);
 
 
+  // Save pipeline to backend
+  const handleSave = useCallback(async () => {
+    if (nodes.length === 0) { toast('Canvas is empty — nothing to save.', { icon: '📭' }); return; }
+    const name = window.prompt('Pipeline name:', pipelineName || 'My Pipeline');
+    if (!name) return;
+    const id = `pipeline-${Date.now()}`;
+    await savePipeline(id, name.trim(), nodes, edges);
+    setPipelineName(name.trim());
+  }, [nodes, edges, pipelineName, savePipeline, setPipelineName]);
+
+  // Open load modal
+  const handleOpenLoad = useCallback(async () => {
+    setIsLoadModalOpen(true);
+    await fetchSavedPipelines();
+  }, [fetchSavedPipelines]);
+
+  // Load a pipeline from the list
+  const handleLoadSaved = useCallback(async (id) => {
+    const record = await loadPipeline(id);
+    if (!record) return;
+    const { nodes: n, edges: e } = record.data || {};
+    if (!n) { toast.error('Invalid pipeline data'); return; }
+    set({ nodes: n, edges: e || [], pipelineName: record.name, activeNodeId: null });
+    setTimeout(() => reactFlowInstanceRef.current?.fitView({ padding: 0.12, duration: 500 }), 80);
+    setIsLoadModalOpen(false);
+  }, [loadPipeline, set]);
+
   // Keyboard shortcuts
   useKeyboardShortcuts({
     onOpenCommandPalette: () => setIsPaletteOpen(true),
@@ -232,6 +262,27 @@ function App() {
             <Sparkles className="w-3.5 h-3.5" />
             Templates
           </button>
+          <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1" />
+          {/* Save / Load pipeline buttons */}
+          <button
+            onClick={handleSave}
+            disabled={isSaving || nodes.length === 0}
+            aria-label="Save pipeline to server"
+            title="Save Pipeline"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            Save
+          </button>
+          <button
+            onClick={handleOpenLoad}
+            aria-label="Load pipeline from server"
+            title="Load Pipeline"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-700/40 hover:bg-sky-100 dark:hover:bg-sky-900/40 transition-all"
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            Load
+          </button>
         </div>
 
 
@@ -281,6 +332,49 @@ function App() {
           onLoadTemplate={handleLoadTemplate}
         />
       </Suspense>
+
+      {/* Load Pipeline Modal */}
+      {isLoadModalOpen && (
+        <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsLoadModalOpen(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-lg max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <FolderOpen className="w-4 h-4 text-sky-500" /> Load Pipeline
+              </h2>
+              <button onClick={() => setIsLoadModalOpen(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {isPipelinesLoading ? (
+                <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-sky-500" /></div>
+              ) : savedPipelines.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500 gap-2">
+                  <FolderOpen className="w-10 h-10 opacity-30" />
+                  <p className="text-sm">No saved pipelines yet.</p>
+                  <p className="text-xs">Click <strong>Save</strong> to persist your current pipeline.</p>
+                </div>
+              ) : (
+                savedPipelines.map(p => (
+                  <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 hover:border-sky-300 dark:hover:border-sky-600 transition-colors group">
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleLoadSaved(p.id)}>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{p.name}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{new Date(p.updated_at).toLocaleString()}</p>
+                    </div>
+                    <button
+                      onClick={() => deletePipelineById(p.id, p.name)}
+                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all"
+                      title="Delete"
+                    ><Trash className="w-3.5 h-3.5" /></button>
+                    <button
+                      onClick={() => handleLoadSaved(p.id)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-700/40 hover:bg-sky-100 dark:hover:bg-sky-900/40 transition-colors"
+                    >Load</button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 

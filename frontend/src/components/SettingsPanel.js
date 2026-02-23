@@ -440,12 +440,12 @@ export const SettingsPanel = () => {
                         </div>
                         <div className="flex-1 space-y-2 divide-y divide-slate-50 dark:divide-slate-700/50">
                             <TextInputRow
-                                label="OpenAI API Key"
-                                description="For LLM, Embedder &amp; Image Gen nodes."
-                                value={settings.openaiApiKey}
-                                placeholder="sk-..."
+                                label="OpenRouter API Key"
+                                description="Covers all LLM, Embedder & Image Gen nodes (GPT-4o, Claude, Gemini…)"
+                                value={settings.openrouterApiKey}
+                                placeholder="sk-or-..."
                                 type="password"
-                                onChange={(v) => setSetting('openaiApiKey', v)}
+                                onChange={(v) => setSetting('openrouterApiKey', v)}
                             />
                             <TextInputRow
                                 label="Pinecone API Key"
