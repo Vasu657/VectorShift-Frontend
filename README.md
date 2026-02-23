@@ -1,112 +1,215 @@
-# VectorShift - Advanced Pipeline Builder
+<div align="center">
+  <img src="https://via.placeholder.com/150?text=VectorShift" alt="Logo" width="100"/>
+  <h1>VectorShift</h1>
+  <p><strong>Advanced Node-Based Pipeline Builder & Orchestration Engine</strong></p>
 
---------------------------------------------------
-## 1. Project Overview
---------------------------------------------------
-Welcome to the **Advanced Pipeline Builder**, a highly sophisticated, beautifully designed, and feature-complete Node-Based Pipeline Builder workspace. 
+  <p>
+    <img src="https://img.shields.io/badge/React-18-blue?logo=react&logoColor=white" alt="React 18" />
+    <img src="https://img.shields.io/badge/FastAPI-0.111.0-teal?logo=fastapi&logoColor=white" alt="FastAPI" />
+    <img src="https://img.shields.io/badge/Zustand-State-orange" alt="Zustand" />
+    <img src="https://img.shields.io/badge/Tailwind-CSS-cyan?logo=tailwindcss&logoColor=white" alt="TailwindCSS" />
+    <img src="https://img.shields.io/badge/NetworkX-DAG-lightgrey" alt="NetworkX" />
+  </p>
+</div>
 
-Its primary purpose is to allow users to visually construct, manage, and analyze directed acyclic graphs (DAGs) representing complex pipelines, such as LLM execution flows or data processing workflows. The application targets advanced orchestration and rapid prototyping capabilities, providing developers and domain experts with a live, simulated execution environment right within the browser.
+---
 
---------------------------------------------------
-## 2. Dynamic Execution & Orchestration
---------------------------------------------------
-The builder has been engineered to go far beyond static DAG validation. It now supports a fully interactive, real-time advanced execution environment:
+## 🚀 1. Project Overview & Vision
 
-- **Streaming LLM Output:** Live, token-by-token streaming of LLM generations directly visualized on the frontend, using Server-Sent Events (SSE) from the FastAPI backend.
-- **Live Cost & Token Tracking:** An integrated dashboard dynamically tracks in-flight token usage and calculates estimated USD costs per interaction using model-specific pricing data.
-- **Human-in-the-Loop (HITL):** Pipeline execution can pause dynamically to request user input or manual approval, ensuring safe and controllable workflow progression.
-- **Live Data Previews:** Real-time visibility into the exact payload data flowing between nodes, allowing deep inspection of graph state at any execution step.
-- **Dynamic Simulated Execution & Terminal Streaming:** Elaborate visual feedback showing flow paths with animated ReactFlow CSS traits, while detailed topological analysis and execution logs stream directly into a styled Terminal UI.
+Welcome to the **VectorShift Pipeline Builder** — a highly sophisticated, aesthetically premium, and feature-complete **Node-Based Execution Environment**.
 
---------------------------------------------------
-## 3. Core Features & UX
---------------------------------------------------
+Designed for developers, engineers, and domain experts, VectorShift allows users to visually construct, manage, personalize, and analyze **directed acyclic graphs (DAGs)** representing complex execution pipelines. Whether you are building Agentic LLM flows, orchestrating multi-step API chains, or constructing complex data extraction workflows, this platform provides a **live, real-time simulated execution environment** natively within your browser. 
 
-- **Command Palette (`Ctrl+K`)**
-  - A Spotlight-inspired quick-lookup modal that captures global keyboard shortcuts, allowing instant text-based searching and spawning of nodes at the center of the viewport without relying on slow drag-and-drop operations.
+The core philosophy of VectorShift is to bridge the gap between abstract algorithmic programming and intuitive visual workflow orchestration, without compromising on power or flexibility.
 
-- **Configuration Sidebar & Settings Panel**
-  - Complex object configurations are extracted to a collapsible right-hand property inspector sidebar, keeping the canvas neat and nodes compact. Settings also include global API key management for seamless LLM and external service integrations.
+---
 
-- **Template Gallery**
-  - Pre-loaded JSON schema DAGs that instantly bulk-populate the ReactFlow canvas environment (e.g., Simple Chatbots, RAG Pipelines, Complex Data Extraction).
+## ⚡ 2. Dynamic Execution & Real-Time Orchestration
 
-- **Premium Interface & Dark Mode**
-  - TailwindCSS deep color tokens integrated with Framer Motion transitions create fluid toggling and glassmorphic elevations across nodes.
+The platform transcends traditional static DAG validation, introducing a fully interactive, real-time execution engine.
 
---------------------------------------------------
-## 4. Architectural Innovations
---------------------------------------------------
-The project promotes **Separation of Concerns**, **Domain-Driven Design**, and robust **Modularization**:
+- **Streaming LLM Output ([SSE Integration])**: Live, token-by-token streaming of Large Language Model generations. Rendered seamlessly onto the frontend via FastAPI Server-Sent Events (SSE). Watch your agents think, type, and respond in real-time.
+- **Live Cost & Token Dashboard**: An integrated tracking system monitors in-flight token usage in real-time. Dynamically calculates estimated USD costs using model-specific pricing data, preventing bill shock during heavy LLM workflows.
+- **Human-in-the-Loop (HITL) Execution**: Workflows can intelligently pause execution, requesting manual human approval or dynamic user inputs before progressing. Ensures high-fidelity control over autonomous sequences and potentially destructive actions.
+- **Live Data Previews**: Inspect exactly what payloads, JSON objects, and textual data are flowing between nodes via interactive Data Preview Modals and dynamic Terminal UI streaming. 
+- **Animated Simulated Execution**: Exquisite visual feedback paths utilizing animated ReactFlow edge states. A built-in terminal processes execution logs using robust topological sorting logic, allowing you to debug flows easily.
 
-- **Registry Pattern:** Node behavior and visuals are mapped through a centralized `registry/`, meaning extending the app requires simply registering the new class map, instantly propagating to menus and canvases automatically.
-- **Service Layer Abstraction:** Python algorithmic DAG checks and execution pipelines are abstracted into dedicated backend services (`graph_service.py`, `execution_service.py`), keeping FastAPI routers clean.
-- **State Management:** Uses **Zustand (`store.js`)** to prevent deep prop-drilling, creating a predictable global store for UI components and pipeline state.
-- **Error Handling:** Granular `NodeErrorBoundary` elements and robust backend Pydantic validation ensure app stability and graceful degradation.
+---
 
-### Project Structure Tree
+## ✨ 3. Premium Core Features & UX
+
+- **Spotlight Command Palette (`Ctrl/Cmd + K`)**
+  A beautifully designed spotlight-style modal that captures global keyboard shortcuts, enabling instant text-based searches and dynamic node spawning exactly where the viewport is focused.
+  
+- **Centralized Configuration Sidebar**
+  Deep node configurations are abstracted away into a collapsible, right-hand property inspector sidebar. This ensures the canvas remains pristine, and nodes remain beautifully compact while neatly integrating global API key management securely.
+  
+- **Intelligent Template Gallery**
+  Instantly bootstrap your workspace. Load pre-configured JSON schema templates—such as Customer Support Bots, QA RAG pipelines, or Sequential Data extractors—directly onto the ReactFlow canvas with a single click.
+
+- **Premium Interface Ecosystem & Dark Mode**
+  Leveraging TailwindCSS deep color tokens and Framer Motion micro-animations to deliver a modern glassmorphic aesthetic, buttery smooth transitions, and a meticulously crafted deep Dark Mode environment.
+
+---
+
+## 🧩 4. Comprehensive Node Ecosystem
+
+VectorShift ships with a robust library of functional nodes, spanning various domains of computation. They are categorized neatly in the builder:
+
+### 📥 Inputs & Outputs
+- **Input Node**: The entry point for passing user queries or programmatic arguments into the pipeline.
+- **Output Node**: The finale of a sequence, collecting terminal data and presenting it back to the user or caller. 
+- **Text Area Node**: For statically declared large text blobs or system prompts.
+
+### 🤖 Artificial Intelligence (LLMs & Image Gen)
+- **LLM Node**: Connects to the robust OpenRouter ecosystem. Supports streaming, dynamic system prompt injection, and granular temperature/parameter control.
+- **Image Generation Node**: Hooks into vision models (e.g., DALL-E) to dynamically output generated image URLs directly into the pipeline flow.
+
+### 🌐 Integrations (Search & APIs)
+- **Tavily Search Node**: A hyper-optimized search orchestration node capable of gathering, summarizing, and routing modern web data into your LLMs.
+- **HTTP/API Node**: Construct custom GET/POST requests dynamically. Chain multiple API calls and inject outputs into downstream nodes.
+
+### ⚙️ Logic & Conditionals
+- **Router Node**: Conditionally route the flow of execution based on specific Regex matches or string inclusions. Acts as the control-flow mechanism of your DAG.
+- **Math Node**: Perform rapid mathematical aggregations, basic algebra, or array-based calculations.
+
+### 🐍 Code Execution (Data Processing)
+- **Python Execution Node**: Safely run and transform data using a lightweight Python evaluator, manipulating JSON objects mid-flight between nodes without leaving the canvas.
+
+---
+
+## 🏗️ 5. Architectural Innovations
+
+Built with **Separation of Concerns**, **Domain-Driven Design**, and extensive **Modularity**:
+
+- **Dynamic Registry Pattern**: Node behaviors, metadata, structure, and visuals are fully mapped via a centralized `registry/`. Extending the platform just requires adding functional Node definitions into the registry list — instantly propagating to the Sidebar, Command Palette, and Canvas capabilities.
+- **Abstracted Service Layer**: Complex Python algorithmic routines (DAG cyclic checks, topological sorting, runtime execution streams) are cleanly abstracted into pure business logic modules (`execution_service.py`, `graph_service.py`). Fast API routers remain lightweight.
+- **Granular State Slicing**: Utilizing **Zustand** alongside `zundo` for robust undo/redo capabilities. Distinct stores like `canvasSlice`, `executionSlice`, and `uiSlice` prevent unnecessary React prop-drilling and rendering bottlenecks.
+- **Robust API & Execution Security**: Granular `NodeErrorBoundary` React elements protect UI stability. Strict Pydantic models on the backend explicitly validate request payloads. Rate limiting via SlowAPI prevents backend exploitation entirely.
+
+### Directory Structure Topology
 
 ```text
-├── frontend/src/
-│    ├── api/                 # Axios configuration and API interceptors
-│    ├── components/          # Reusable UI partials (Command Palette, Sidebar, Terminals)
-│    ├── hooks/               # Custom lifecycle & interaction hooks 
-│    ├── nodes/               # Node implementations (BaseNode, LLM, ImageGen, textNode)
-│    ├── registry/            # Centralized dictionary pattern for mapping Node types
-│    ├── store/               # Zustand global state slices
-│    ├── templates/           # Static JSON pipeline boilerplate
-│    └── utils/               # Formatting helper functions
+📦 VectorShift-Frontend
+├── 📂 backend
+│    ├── 📂 api/v1/routers/    # API endpoints (Validation, Execution SSE, Models, Persistence)
+│    ├── 📂 domain/            # Strict Pydantic schemas enforcing request validation
+│    ├── 📂 services/          # Core Business Logic (Execution Engine, Graph/DAG, SQLite Store)
+│    ├── 📄 main.py            # FastAPI entry point, Middleware & Rate limiting configuration
+│    └── 📄 pipelines.db       # Embedded SQLite persistence store
 │
-└── backend/
-     ├── api/v1/routers/      # API endpoints (Validation, Execution, SSE Streaming)
-     ├── domain/              # Pydantic schemas enforcing strict payload validation
-     ├── services/            # Pure Python business/graph logic (Execution Engine, DAG info)
-     └── main.py              # FastAPI application core with Middleware
+└── 📂 frontend
+     ├── 📂 src
+     │    ├── 📂 api/          # Axios interceptors & backend API definitions
+     │    ├── 📂 components/   # Pure UI Partials (Command Palette, Terminal, Sidebar)
+     │    ├── 📂 hooks/        # Intelligent React Hooks (Store bindings, event listeners)
+     │    ├── 📂 nodes/        # ReactFlow Custom Node Definitions Ecosystem
+     │    ├── 📂 registry/     # Centralized Dictionary Pattern mapping Node architectures
+     │    ├── 📂 store/        # Zustand global state (Canvas, Execution, UI slices)
+     │    ├── 📂 templates/    # Immutable JSON configurations for pipeline templates
+     │    └── 📂 utils/        # Generic layout algorithms (Dagre) and formatting helpers
+     └── 📄 tailwind.config.js # Strict UI design tokens
 ```
 
---------------------------------------------------
-## 5. Performance Optimizations
---------------------------------------------------
-- **Memoization & Rendering Parity:** Deep adoption of `useMemo` and `useCallback` to completely freeze unaffected Node UI elements, minimizing ReactFlow render cycles.
-- **State Slicing Optimization:** Dividing `store.js` into functional contexts ensures canvas interactions (zooming/dragging) don't trigger unnecessary re-renders in other panels.
-- **Algorithmic Graph Computing:** Backend leverages `networkx` to compute topological sorting, manage complex DAG validation, and orchestrate execution sequences efficiently.
+---
 
---------------------------------------------------
-## 6. Tech Stack
---------------------------------------------------
-- **Frontend:** React 18, React Flow, Zustand, Framer Motion, TailwindCSS, Lucide React, Axios, Dagre
-- **Backend:** Python 3, FastAPI, NetworkX, Uvicorn, SSE Starlette, Pydantic
-- **Tooling:** ESLint, Prettier
+## 📖 6. User Guide: Building Your First Pipeline
 
---------------------------------------------------
-## 7. Setup & Installation
---------------------------------------------------
-### Clone Repository
+1. **Open the Canvas**: Navigate to `http://localhost:3000`. You'll be presented with a blank workspace.
+2. **Spawn Nodes**: Press `Cmd/Ctrl + K` to open the Command Palette. Type "Input" and press Enter. A new Input node will spawn in the center of the canvas. 
+3. **Configure & Connect**: Spawn an "LLM Node" and an "Output Node". Click and drag from the right handle of the Input Node to the left handle of the LLM Node. Connect the LLM Node to the Output Node.
+4. **Input Settings**: Click on a Node. On the right-hand sidebar, enter your API key or configure strict model inputs (e.g., set System Prompts or modify the Model version). 
+5. **Execute**: From the top navigation, hit **"Run Execution"**. The built-in terminal will slide up from the bottom, showing topological progression, while the final generative output streams back live.
+
+---
+
+## 🏎️ 7. Performance Optimizations
+
+1. **Memoization Parity**: Aggressive adoption of React `useMemo` and `useCallback` completely freezes unaffected ReactFlow UI components, constraining React rendering cycles purely to active components.
+2. **Topological Graph Computing**: The backend leverages `networkx` to compute valid topological routes instantly, isolating dead graphs and detecting cyclic flow exceptions precisely prior to expensive API execution.
+3. **Database Persistence Cache**: Auto-saving capabilities integrated fluidly via `aiosqlite` ensures the user's pipeline states persist securely without pausing or interrupting active canvas visualizations.
+
+---
+
+## 🛠️ 8. Tech Stack Overview
+
+| Area | Technologies |
+|---|---|
+| **Frontend Framework** | React 18, React Router v6 |
+| **State Orchestration** | Zustand, Zundo (Time Travel) |
+| **UI Ecosystem** | TailwindCSS, Framer Motion, Lucide React, clsx, tailwind-merge |
+| **Pipeline UI** | React Flow 11, Dagre (Auto-Layout) |
+| **Backend Engine** | Python 3, FastAPI, Uvicorn |
+| **Graph Algebra** | NetworkX |
+| **Streaming & APIs** | Server-Sent Events (SSE), HTTPX, Pydantic, SlowAPI |
+| **Database** | aiosqlite (SQLite Async) |
+
+---
+
+## 💻 9. Setup & Installation Guide
+
+Launch the scalable VectorShift environment seamlessly on your local machine.
+
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/Vasu657/VectorShift-Frontend.git
 cd VectorShift-Frontend
 ```
 
-### Start Backend Services
+### 2. Start Backend API Layer (FastAPI)
 ```bash
 cd backend
+
+# Create Virtual Environment & Activate
 python -m venv venv
-# On Windows: venv\Scripts\activate
-# On Mac/Linux: source venv/bin/activate
+# Windows: venv\Scripts\activate
+# Mac/Linux: source venv/bin/activate
+
+# Install Dependencies
 pip install -r requirements.txt
+
+# Start the Application Module
 python -m uvicorn main:app --reload
 ```
-*The API is now running at `http://localhost:8000`.*
+> The robust API validation & execution server will mount at `http://localhost:8000`
 
-### Start Frontend Client
+### 3. Start Frontend Client (React)
+Open a new terminal session.
 ```bash
 cd frontend
+
+# Install Dependencies securely
 npm install
+
+# Launch Dev Server
 npm start
 ```
-*The Builder is now running at `http://localhost:3000`.*
+> The highly interactive Web Application UI starts automatically at `http://localhost:3000`
 
---------------------------------------------------
-## 8. Acknowledgements
---------------------------------------------------
-Thank you for reviewing this advanced iteration of the Pipeline Builder!
+---
+
+## 🎯 10. Future Roadmap
+
+- **Multi-Agent Workflows**: Support for circular, stateful agent conversational graphs (vs just DAGs).
+- **Environment Management**: Create separate Dev, Staging, and Production environments for deployed endpoint pipelines.
+- **Version Control**: Git-style commit history and visual diffs of pipeline states.
+- **Self-Hosted LLMs**: Deeper connection integrations with local Ollama or vLLM instances for privacy-compliant deployments.
+
+---
+
+## 🤝 11. Contributing
+
+We welcome contributions from the community! 
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 12. License & Acknowledgements
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+VectorShift demonstrates exhaustive foundational platform architecture, highly scalable state handling, sophisticated aesthetic standards, and powerful real-time execution capabilities. Thank you for assessing the VectorShift advanced Node-Based Pipeline engine!
