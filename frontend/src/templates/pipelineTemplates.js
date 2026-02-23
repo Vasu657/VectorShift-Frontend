@@ -16,7 +16,7 @@ export const PIPELINE_TEMPLATES = [
             { id: 'n3', type: 'embedder', position: { x: 300, y: 80 }, data: { embeddingModel: 'text-embedding-3-small', dimensions: '1536' } },
             { id: 'n4', type: 'vectorDb', position: { x: 560, y: 80 }, data: { action: 'Upsert', indexName: 'docs-index' } },
             { id: 'n5', type: 'vectorDb', position: { x: 560, y: 300 }, data: { action: 'Query', indexName: 'docs-index' } },
-            { id: 'n6', type: 'llm', position: { x: 820, y: 190 }, data: { model: 'gpt-4o', systemPrompt: 'Answer using the provided context only.' } },
+            { id: 'n6', type: 'llm', position: { x: 820, y: 190 }, data: { model: '', systemPrompt: 'Answer using the provided context only.' } },
             { id: 'n7', type: 'customOutput', position: { x: 1060, y: 190 }, data: { outputName: 'answer', outputType: 'Text' } },
         ],
         edges: [
@@ -39,8 +39,8 @@ export const PIPELINE_TEMPLATES = [
         color: 'purple',
         nodes: [
             { id: 'n1', type: 'customInput', position: { x: 40, y: 200 }, data: { inputName: 'topic', inputType: 'Text' } },
-            { id: 'n2', type: 'llm', position: { x: 260, y: 200 }, data: { model: 'gpt-4o', systemPrompt: 'Write a first draft about the given topic.' } },
-            { id: 'n3', type: 'llm', position: { x: 520, y: 200 }, data: { model: 'claude-3-5-sonnet', systemPrompt: 'Critique and improve the following draft.' } },
+            { id: 'n2', type: 'llm', position: { x: 260, y: 200 }, data: { model: '', systemPrompt: 'Write a first draft about the given topic.' } },
+            { id: 'n3', type: 'llm', position: { x: 520, y: 200 }, data: { model: '', systemPrompt: 'Critique and improve the following draft.' } },
             { id: 'n4', type: 'customOutput', position: { x: 760, y: 200 }, data: { outputName: 'final_draft', outputType: 'Text' } },
         ],
         edges: [
@@ -59,7 +59,7 @@ export const PIPELINE_TEMPLATES = [
         color: 'pink',
         nodes: [
             { id: 'n1', type: 'customInput', position: { x: 40, y: 180 }, data: { inputName: 'concept', inputType: 'Text' } },
-            { id: 'n2', type: 'llm', position: { x: 260, y: 180 }, data: { model: 'gpt-4o', systemPrompt: 'Convert this concept into a detailed, vivid image generation prompt.' } },
+            { id: 'n2', type: 'llm', position: { x: 260, y: 180 }, data: { model: '', systemPrompt: 'Convert this concept into a detailed, vivid image generation prompt.' } },
             { id: 'n3', type: 'imageGen', position: { x: 520, y: 180 }, data: { imageModel: 'dall-e-3', imageSize: '1024x1024', quality: 'hd' } },
             { id: 'n4', type: 'customOutput', position: { x: 760, y: 180 }, data: { outputName: 'image_url', outputType: 'Text' } },
         ],
@@ -103,7 +103,7 @@ export const PIPELINE_TEMPLATES = [
         nodes: [
             { id: 'n1', type: 'customInput', position: { x: 40, y: 180 }, data: { inputName: 'url', inputType: 'Text' } },
             { id: 'n2', type: 'webScraper', position: { x: 260, y: 180 }, data: { url: 'https://example.com', format: 'Raw Text' } },
-            { id: 'n3', type: 'summarizer', position: { x: 500, y: 180 }, data: { summaryModel: 'gpt-4o', summaryStyle: 'Bullet Points', summaryLength: 'Medium' } },
+            { id: 'n3', type: 'summarizer', position: { x: 500, y: 180 }, data: { summaryModel: '', summaryStyle: 'Bullet Points', summaryLength: 'Medium' } },
             { id: 'n4', type: 'customOutput', position: { x: 740, y: 180 }, data: { outputName: 'summary', outputType: 'Text' } },
         ],
         edges: [
@@ -144,7 +144,7 @@ export const PIPELINE_TEMPLATES = [
         color: 'amber',
         nodes: [
             { id: 'n1', type: 'customInput', position: { x: 40, y: 180 }, data: { inputName: 'event_data', inputType: 'Text' } },
-            { id: 'n2', type: 'llm', position: { x: 260, y: 180 }, data: { model: 'gpt-4o', systemPrompt: 'Format this data as a short, readable Slack message.' } },
+            { id: 'n2', type: 'llm', position: { x: 260, y: 180 }, data: { model: '', systemPrompt: 'Format this data as a short, readable Slack message.' } },
             { id: 'n3', type: 'slackWebhook', position: { x: 500, y: 180 }, data: { webhookUrl: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL' } },
             { id: 'n4', type: 'customOutput', position: { x: 740, y: 180 }, data: { outputName: 'send_status', outputType: 'Text' } },
         ],
@@ -166,7 +166,7 @@ export const PIPELINE_TEMPLATES = [
             { id: 'n1', type: 'customInput', position: { x: 40, y: 80 }, data: { inputName: 'item_1', inputType: 'Text' } },
             { id: 'n2', type: 'customInput', position: { x: 40, y: 280 }, data: { inputName: 'item_2', inputType: 'Text' } },
             { id: 'n3', type: 'join', position: { x: 260, y: 180 }, data: { separator: '\n\n' } },
-            { id: 'n4', type: 'llm', position: { x: 480, y: 180 }, data: { model: 'gpt-4o', systemPrompt: 'Compose a professional email digest from these items.' } },
+            { id: 'n4', type: 'llm', position: { x: 480, y: 180 }, data: { model: '', systemPrompt: 'Compose a professional email digest from these items.' } },
             { id: 'n5', type: 'email', position: { x: 720, y: 180 }, data: { emailProvider: 'SendGrid', emailTo: 'recipient@example.com', emailSubject: 'Daily Digest' } },
             { id: 'n6', type: 'customOutput', position: { x: 940, y: 180 }, data: { outputName: 'email_status', outputType: 'Text' } },
         ],
@@ -181,21 +181,23 @@ export const PIPELINE_TEMPLATES = [
 
     {
         id: 'github-issue-bot',
-        name: 'GitHub Issue Bot',
+        name: 'GitHub Code Reviewer',
         emoji: '🐙',
-        description: 'Takes user-reported bugs or feature requests, formats them via LLM, and automatically creates a GitHub issue.',
+        description: 'Fetches an entire codebase from a repository, analyzes the architecture and code for bugs via LLM, and automatically creates a GitHub issue with the findings.',
         category: 'Integrations',
         color: 'indigo',
         nodes: [
-            { id: 'n1', type: 'customInput', position: { x: 40, y: 180 }, data: { inputName: 'bug_report', inputType: 'Text' } },
-            { id: 'n2', type: 'llm', position: { x: 260, y: 180 }, data: { model: 'gpt-4o', systemPrompt: 'Format this bug report as a GitHub issue with a title and body in markdown.' } },
-            { id: 'n3', type: 'github', position: { x: 500, y: 180 }, data: { ghAction: 'Create Issue', ghRepo: 'owner/repo-name' } },
-            { id: 'n4', type: 'customOutput', position: { x: 740, y: 180 }, data: { outputName: 'issue_url', outputType: 'Text' } },
+            { id: 'n1', type: 'customInput', position: { x: 40, y: 180 }, data: { inputName: 'repository_name', inputType: 'Text' } },
+            { id: 'n2', type: 'github', position: { x: 260, y: 180 }, data: { ghAction: 'Read Entire Repository', ghRepo: 'Sample' } },
+            { id: 'n3', type: 'llm', position: { x: 480, y: 180 }, data: { model: '', maxTokens: 8192, systemPrompt: 'You are an expert Reviewer. Review the provided codebase dump for bugs, architectural improvements, security vulnerabilities, or performance improvements.\n\nYou must respond STRICTLY with a valid JSON block enclosed in ```json ... ``` containing exactly two keys: "title" and "body".\nThe "title" should be a short 5-6 word summary of the main problem found.\nThe "body" should be a detailed markdown explanation of the issues and how to fix them.' } },
+            { id: 'n4', type: 'github', position: { x: 740, y: 180 }, data: { ghAction: 'Create Issue', ghRepo: 'Sample' } },
+            { id: 'n5', type: 'customOutput', position: { x: 960, y: 180 }, data: { outputName: 'issue_url', outputType: 'Text' } },
         ],
         edges: [
             { id: 'e1', source: 'n1', target: 'n2' },
             { id: 'e2', source: 'n2', target: 'n3' },
             { id: 'e3', source: 'n3', target: 'n4' },
+            { id: 'e4', source: 'n4', target: 'n5' },
         ],
     },
 
@@ -208,7 +210,7 @@ export const PIPELINE_TEMPLATES = [
         color: 'indigo',
         nodes: [
             { id: 'n1', type: 'customInput', position: { x: 40, y: 180 }, data: { inputName: 'log_data', inputType: 'Text' } },
-            { id: 'n2', type: 'llm', position: { x: 260, y: 180 }, data: { model: 'gpt-4o', systemPrompt: 'Format this data as a structured Notion page in markdown.' } },
+            { id: 'n2', type: 'llm', position: { x: 260, y: 180 }, data: { model: '', systemPrompt: 'Format this data as a structured Notion page in markdown.' } },
             { id: 'n3', type: 'notion', position: { x: 500, y: 180 }, data: { notionAction: 'Create Page', notionDbId: 'your-database-id' } },
             { id: 'n4', type: 'customOutput', position: { x: 740, y: 180 }, data: { outputName: 'page_url', outputType: 'Text' } },
         ],
@@ -230,7 +232,7 @@ export const PIPELINE_TEMPLATES = [
         nodes: [
             { id: 'n1', type: 'customInput', position: { x: 40, y: 180 }, data: { inputName: 'spreadsheet_id', inputType: 'Text' } },
             { id: 'n2', type: 'googleSheets', position: { x: 260, y: 180 }, data: { sheetsAction: 'Read Range', spreadsheetId: 'your-spreadsheet-id', sheetRange: 'Sheet1!A:C' } },
-            { id: 'n3', type: 'llm', position: { x: 520, y: 180 }, data: { model: 'gpt-4o', systemPrompt: 'Categorize and enrich each row in this CSV data.' } },
+            { id: 'n3', type: 'llm', position: { x: 520, y: 180 }, data: { model: '', systemPrompt: 'Categorize and enrich each row in this CSV data.' } },
             { id: 'n4', type: 'googleSheets', position: { x: 760, y: 180 }, data: { sheetsAction: 'Append Row', spreadsheetId: 'your-spreadsheet-id', sheetRange: 'Sheet2!A1' } },
             { id: 'n5', type: 'customOutput', position: { x: 980, y: 180 }, data: { outputName: 'rows_written', outputType: 'Text' } },
         ],
@@ -276,7 +278,7 @@ export const PIPELINE_TEMPLATES = [
             { id: 'n1', type: 'customInput', position: { x: 40, y: 180 }, data: { inputName: 'csv_data', inputType: 'Text' } },
             { id: 'n2', type: 'csvParser', position: { x: 240, y: 180 }, data: { csvDelimiter: 'Comma', hasHeader: 'Yes' } },
             { id: 'n3', type: 'loop', position: { x: 460, y: 180 }, data: { loopMode: 'For Each', maxIterations: '100' } },
-            { id: 'n4', type: 'llm', position: { x: 680, y: 180 }, data: { model: 'gpt-4o', systemPrompt: 'Enrich this row with additional context.' } },
+            { id: 'n4', type: 'llm', position: { x: 680, y: 180 }, data: { model: '', systemPrompt: 'Enrich this row with additional context.' } },
             { id: 'n5', type: 'googleSheets', position: { x: 900, y: 180 }, data: { sheetsAction: 'Append Row', spreadsheetId: 'your-output-spreadsheet-id', sheetRange: 'Sheet1!A1' } },
             { id: 'n6', type: 'customOutput', position: { x: 1100, y: 180 }, data: { outputName: 'enriched_rows', outputType: 'Text' } },
         ],
@@ -300,7 +302,7 @@ export const PIPELINE_TEMPLATES = [
             { id: 'n1', type: 'customInput', position: { x: 40, y: 200 }, data: { inputName: 'document', inputType: 'Text' } },
             { id: 'n2', type: 'conditional', position: { x: 260, y: 200 }, data: { condition: 'input.length > 500' } },
             { id: 'n3', type: 'summarizer', position: { x: 500, y: 80 }, data: { summaryStyle: 'Concise', summaryLength: 'Short' } },
-            { id: 'n4', type: 'llm', position: { x: 500, y: 320 }, data: { model: 'gpt-4o', systemPrompt: 'Respond concisely.' } },
+            { id: 'n4', type: 'llm', position: { x: 500, y: 320 }, data: { model: '', systemPrompt: 'Respond concisely.' } },
             { id: 'n5', type: 'customOutput', position: { x: 740, y: 200 }, data: { outputName: 'output', outputType: 'Text' } },
         ],
         edges: [
@@ -323,7 +325,7 @@ export const PIPELINE_TEMPLATES = [
         nodes: [
             { id: 'n1', type: 'customInput', position: { x: 40, y: 180 }, data: { inputName: 'items_list', inputType: 'Text' } },
             { id: 'n2', type: 'loop', position: { x: 240, y: 180 }, data: { loopMode: 'For Each', maxIterations: '10' } },
-            { id: 'n3', type: 'llm', position: { x: 460, y: 180 }, data: { model: 'gpt-3.5-turbo', systemPrompt: 'Translate the following item to French.' } },
+            { id: 'n3', type: 'llm', position: { x: 460, y: 180 }, data: { model: '', systemPrompt: 'Translate the following item to French.' } },
             { id: 'n4', type: 'join', position: { x: 680, y: 180 }, data: { separator: '\n' } },
             { id: 'n5', type: 'customOutput', position: { x: 880, y: 180 }, data: { outputName: 'translated_items', outputType: 'Text' } },
         ],
@@ -388,7 +390,7 @@ export const PIPELINE_TEMPLATES = [
         color: 'green',
         nodes: [
             { id: 'n1', type: 'customInput', position: { x: 80, y: 180 }, data: { inputName: 'message', inputType: 'Text' } },
-            { id: 'n2', type: 'llm', position: { x: 320, y: 180 }, data: { model: 'gpt-4o', systemPrompt: 'You are a friendly assistant.' } },
+            { id: 'n2', type: 'llm', position: { x: 320, y: 180 }, data: { model: '', systemPrompt: 'You are a friendly assistant.' } },
             { id: 'n3', type: 'customOutput', position: { x: 560, y: 180 }, data: { outputName: 'response', outputType: 'Text' } },
         ],
         edges: [
@@ -431,7 +433,7 @@ export const PIPELINE_TEMPLATES = [
         nodes: [
             { id: 'n1', type: 'customInput', position: { x: 40, y: 200 }, data: { inputName: 'research_url', inputType: 'Text' } },
             { id: 'n2', type: 'webScraper', position: { x: 240, y: 200 }, data: { url: 'https://example.com', format: 'Markdown' } },
-            { id: 'n3', type: 'summarizer', position: { x: 460, y: 200 }, data: { summaryModel: 'gpt-4o', summaryStyle: 'Bullet Points', summaryLength: 'Medium' } },
+            { id: 'n3', type: 'summarizer', position: { x: 460, y: 200 }, data: { summaryModel: '', summaryStyle: 'Bullet Points', summaryLength: 'Medium' } },
             { id: 'n4', type: 'slackWebhook', position: { x: 680, y: 100 }, data: { webhookUrl: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL' } },
             { id: 'n5', type: 'email', position: { x: 680, y: 300 }, data: { emailProvider: 'SendGrid', emailTo: 'recipient@example.com', emailSubject: 'Research Summary' } },
             { id: 'n6', type: 'customOutput', position: { x: 900, y: 200 }, data: { outputName: 'summary', outputType: 'Text' } },

@@ -108,7 +108,7 @@ export const SubmitButton = () => {
             // Build env map from settings store — these are checked by the backend per node type
             const settings = useSettingsStore.getState();
             const env = {
-                OPENAI_API_KEY: settings.openaiApiKey || '',
+                OPENROUTER_API_KEY: settings.openrouterApiKey || '',
                 PINECONE_API_KEY: settings.pineconeApiKey || '',
                 SLACK_WEBHOOK_URL: settings.slackWebhookUrl || '',
                 SENDGRID_API_KEY: settings.sendgridApiKey || '',
@@ -185,14 +185,22 @@ export const SubmitButton = () => {
                             }
 
                             if (data.event === 'node_chunk') {
-                                // For streaming LLMs, update log or node data visually
-                                // Here we just append to the last log if it's the same node, else create a generic marker
-                                // For simplicity, let's keep it silent in UI unless needed, or maybe update node internal store.
+                                // Stream LLM tokens live into the last log entry
+                                setExecutionLogs(prev => {
+                                    const last = prev[prev.length - 1];
+                                    if (last && last.nodeId === data.node_id && last.type === 'stream') {
+                                        return [...prev.slice(0, -1), { ...last, message: last.message + data.chunk }];
+                                    }
+                                    return [...prev, { time: new Date().toLocaleTimeString(), type: 'stream', nodeId: data.node_id, message: data.chunk }];
+                                });
                             }
 
                             if (data.event === 'node_complete') {
                                 setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'success', message: `Completed node ${data.node_id}.` }]);
                                 animateEdgeSource(data.node_id);
+                                if (data.result) {
+                                    setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'info', message: `↳ ${data.result}` }]);
+                                }
                                 if (data.metrics) {
                                     setExecutionMetrics(prev => ({
                                         cost: prev.cost + (data.metrics.cost || 0),
@@ -211,10 +219,16 @@ export const SubmitButton = () => {
                             }
 
                             if (data.event === 'pipeline_complete') {
-                                setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'success', message: '✓ All pipeline stages completed!' }]);
+                                const totalTokens = executionMetrics.tokens + ((data.metrics?.tokens_in || 0) + (data.metrics?.tokens_out || 0));
+                                setExecutionLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), type: 'success', message: '✓ All pipeline stages completed successfully!' }]);
                                 setExecutionState(false, []);
                                 useStore.setState(s => ({ edges: s.edges.map(e => ({ ...e, animated: false, style: {} })) }));
                                 setIsExecuting(false);
+                                // Fire the real completion toast — this is what the user should see at the END
+                                toast.success(
+                                    `Pipeline complete! ${executionMetrics.tokens > 0 ? `${executionMetrics.tokens.toLocaleString()} tokens · $${executionMetrics.cost.toFixed(4)}` : ''}`,
+                                    { id: 'pipeline-done', duration: 5000, icon: '🎉' }
+                                );
                             }
                         } catch (e) {
                             console.error('Failed to parse SSE JSON:', e);
@@ -259,7 +273,7 @@ export const SubmitButton = () => {
                 {
                     loading: 'Analysing pipeline…',
                     success: (results) =>
-                        `Pipeline analysed: ${results[0].num_nodes} nodes, ${results[0].num_edges} edges`,
+                        `Graph OK — ${results[0].num_nodes} nodes · starting execution…`,
                     error: 'Analysis failed — check backend connection.',
                 }
             );
@@ -321,7 +335,7 @@ export const SubmitButton = () => {
 
             {pipelineResult && createPortal(
                 <div
-                    className={`fixed bottom-0 right-0 z-[99999] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-[0_-8px_30px_rgb(0,0,0,0.1)] dark:shadow-[0_-8px_30px_rgb(0,0,0,0.3)] transition-all duration-300 ease-in-out ${isExpanded ? 'h-[40vh] min-h-[300px]' : 'h-[42px]'
+                    className={`fixed bottom-0 right-0 z-[50] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-[0_-8px_30px_rgb(0,0,0,0.1)] dark:shadow-[0_-8px_30px_rgb(0,0,0,0.3)] transition-all duration-300 ease-in-out ${isExpanded ? 'h-[40vh] min-h-[300px]' : 'h-[42px]'
                         } flex flex-col font-mono`}
                     style={{ position: 'fixed', bottom: 0, left: isSidebarOpen ? '256px' : '48px', right: 0 }}
                     role="dialog"
@@ -523,7 +537,8 @@ export const SubmitButton = () => {
                                                                     log.type === 'error' ? 'text-red-600 dark:text-red-400' :
                                                                         log.type === 'warn' ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/10 px-1 rounded' :
                                                                             log.type === 'info' ? 'text-indigo-600 dark:text-indigo-300' :
-                                                                                'text-slate-700 dark:text-slate-300'
+                                                                                log.type === 'stream' ? 'text-purple-600 dark:text-purple-300 whitespace-pre-wrap' :
+                                                                                    'text-slate-700 dark:text-slate-300'
                                                                     }`}>
                                                                     {log.message}
                                                                 </span>
